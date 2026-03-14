@@ -3,6 +3,14 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp"
+    },
+    "google-cloud": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["tsx", "mcp-servers/google-cloud/src/index.ts"],
+      "env": {
+        "GOOGLE_SERVICE_ACCOUNT_KEY": ""
+      }
     }
   }
 }
