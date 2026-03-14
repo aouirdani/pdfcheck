@@ -234,6 +234,29 @@ export const tools: Tool[] = [
     border: "border-lime-100",
     category: "Security",
   },
+  {
+    id: "ocr",
+    title: "OCR PDF",
+    description: "Extract text from scanned PDFs using optical character recognition.",
+    icon: "annotate",
+    color: "text-cyan-600",
+    bg: "bg-cyan-50",
+    border: "border-cyan-100",
+    category: "Security",
+    badge: "AI",
+  },
+
+  // Organize (continued)
+  {
+    id: "page-numbers",
+    title: "Page Numbers",
+    description: "Add page numbers to your PDF. Choose position, style, and start number.",
+    icon: "reorder",
+    color: "text-slate-600",
+    bg: "bg-slate-50",
+    border: "border-slate-100",
+    category: "Organize",
+  },
 ];
 
 export const categories = ["All", "Organize", "Convert to PDF", "Convert from PDF", "Edit PDF", "Security"];

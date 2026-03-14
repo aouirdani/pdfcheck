@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { ToolCard } from "./components/ToolCard";
@@ -6,12 +6,48 @@ import { ToolModal } from "./components/ToolModal";
 import { Features } from "./components/Features";
 import { Pricing } from "./components/Pricing";
 import { Footer } from "./components/Footer";
+import { ToastContainer } from "./components/Toast";
+import { HistoryDrawer } from "./components/HistoryDrawer";
+import { BillingModal } from "./components/BillingModal";
+import { UpgradeModal } from "./components/UpgradeModal";
 import { tools, categories, Tool } from "./data/tools";
 
 export function App() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+
+  // Overlay state
+  const [showHistory, setShowHistory] = useState(false);
+  const [showBilling, setShowBilling] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | undefined>(undefined);
+
+  // Global event listeners
+  useEffect(() => {
+    const handleOpenAuth = () => {
+      // AuthModal is controlled inside Header; dispatch a synthetic click on the Login button
+      // by emitting a custom event that Header listens to — simpler approach: dispatch a
+      // header-level event that Header picks up. Since Header manages its own auth modal,
+      // we trigger the built-in window event and let Header handle it.
+      const btn = document.querySelector<HTMLButtonElement>("[data-open-auth]");
+      if (btn) btn.click();
+    };
+
+    const handleOpenUpgrade = (e: Event) => {
+      const reason = (e as CustomEvent<{ reason?: string }>).detail?.reason;
+      setUpgradeReason(reason);
+      setShowUpgrade(true);
+    };
+
+    window.addEventListener("open-auth", handleOpenAuth);
+    window.addEventListener("open-upgrade", handleOpenUpgrade as EventListener);
+
+    return () => {
+      window.removeEventListener("open-auth", handleOpenAuth);
+      window.removeEventListener("open-upgrade", handleOpenUpgrade as EventListener);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     return tools.filter((t) => {
@@ -38,7 +74,14 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-white font-sans">
-      <Header onSearch={setSearchQuery} />
+      {/* Global toast notifications */}
+      <ToastContainer />
+
+      <Header
+        onSearch={setSearchQuery}
+        onHistory={() => setShowHistory(true)}
+        onBilling={() => setShowBilling(true)}
+      />
       <Hero />
 
       {/* Tools Section */}
@@ -106,7 +149,10 @@ export function App() {
             >
               Start Using Tools
             </button>
-            <button className="border-2 border-white/50 hover:border-white text-white font-semibold px-7 py-3 rounded-full transition text-sm">
+            <button
+              onClick={() => setShowUpgrade(true)}
+              className="border-2 border-white/50 hover:border-white text-white font-semibold px-7 py-3 rounded-full transition text-sm"
+            >
               Get Premium
             </button>
           </div>
@@ -121,6 +167,15 @@ export function App() {
       {selectedTool && (
         <ToolModal tool={selectedTool} onClose={() => setSelectedTool(null)} />
       )}
+
+      {/* Overlays */}
+      <HistoryDrawer isOpen={showHistory} onClose={() => setShowHistory(false)} />
+      <BillingModal isOpen={showBilling} onClose={() => setShowBilling(false)} />
+      <UpgradeModal
+        isOpen={showUpgrade}
+        onClose={() => { setShowUpgrade(false); setUpgradeReason(undefined); }}
+        reason={upgradeReason}
+      />
     </div>
   );
 }

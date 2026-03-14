@@ -1,8 +1,10 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Tool } from "../data/tools";
 import { ToolIcon } from "./ToolIcon";
 import { processTool, triggerDownload, type ProcessResult } from "../lib/tool-processor";
 import { createJob, updateJob } from "../lib/jobs";
+import { toast } from "../lib/toast";
+import { usePlan } from "../hooks/usePlan";
 import type { JobTool } from "../lib/database.types";
 
 interface Props {
@@ -12,6 +14,25 @@ interface Props {
 
 type Step = "upload" | "processing" | "done" | "error";
 
+// PDF tools that require PDF input (magic bytes check)
+const PDF_INPUT_TOOLS = new Set([
+  "split", "compress", "rotate", "reorder", "add-pages",
+  "pdf-to-jpg", "pdf-to-word", "pdf-to-ppt", "pdf-to-excel",
+  "edit-pdf", "watermark", "sign", "annotate", "protect", "unlock",
+  "ocr", "page-numbers",
+]);
+
+async function checkIsPdf(file: File): Promise<boolean> {
+  try {
+    const buf = await file.slice(0, 4).arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    // %PDF magic bytes: 0x25 0x50 0x44 0x46
+    return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46;
+  } catch {
+    return false;
+  }
+}
+
 export function ToolModal({ tool, onClose }: Props) {
   const [step, setStep] = useState<Step>("upload");
   const [files, setFiles] = useState<File[]>([]);
@@ -19,26 +40,111 @@ export function ToolModal({ tool, onClose }: Props) {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ProcessResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [validationError, setValidationError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const handleFiles = (incoming: FileList | null) => {
-    if (!incoming) return;
-    setFiles((prev) => [...prev, ...Array.from(incoming)]);
-  };
+  const { isPro, canUseTools, jobsToday, refetch } = usePlan();
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    handleFiles(e.dataTransfer.files);
+  // Free = 100 MB, Pro = 1 GB
+  const maxFileSizeBytes = isPro ? 1 * 1024 * 1024 * 1024 : 100 * 1024 * 1024;
+  const maxFileSizeLabel = isPro ? "1 GB" : "100 MB";
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
   }, []);
 
-  const handleProcess = async () => {
-    setStep("processing");
+  const validateFiles = useCallback(
+    async (incoming: File[]): Promise<string | null> => {
+      for (const file of incoming) {
+        // Size check
+        if (file.size > maxFileSizeBytes) {
+          return `"${file.name}" exceeds the ${maxFileSizeLabel} file size limit. ${
+            isPro ? "" : "Upgrade to Pro for 1 GB uploads."
+          }`;
+        }
+
+        // PDF magic bytes check for tools that require PDFs
+        if (PDF_INPUT_TOOLS.has(tool.id)) {
+          const isPdf = await checkIsPdf(file);
+          if (!isPdf && file.name.endsWith(".pdf")) {
+            return `"${file.name}" does not appear to be a valid PDF file.`;
+          }
+          // If it doesn't end in .pdf we let the processor handle the type error
+        }
+      }
+      return null;
+    },
+    [tool.id, maxFileSizeBytes, maxFileSizeLabel, isPro]
+  );
+
+  const handleFiles = async (incoming: FileList | null) => {
+    if (!incoming) return;
+    const newFiles = Array.from(incoming);
+    const error = await validateFiles(newFiles);
+    if (error) {
+      setValidationError(error);
+      return;
+    }
+    setValidationError("");
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragging(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [validateFiles]
+  );
+
+  // Simulate progress from 0 → 90 during processing
+  const startProgressSimulation = () => {
     setProgress(0);
+    let current = 0;
+    progressIntervalRef.current = setInterval(() => {
+      // Slow increments that decelerate as we approach 90
+      const increment = Math.max(0.5, (90 - current) * 0.04);
+      current = Math.min(90, current + increment);
+      setProgress(Math.round(current));
+      if (current >= 90) {
+        clearInterval(progressIntervalRef.current!);
+        progressIntervalRef.current = null;
+      }
+    }, 150);
+  };
+
+  const stopProgressSimulation = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+  };
+
+  const handleProcess = async () => {
+    // Premium gating — check before processing
+    if (!canUseTools) {
+      window.dispatchEvent(
+        new CustomEvent("open-upgrade", {
+          detail: {
+            reason: `You've used ${jobsToday}/5 free tools today. Upgrade for unlimited access.`,
+          },
+        })
+      );
+      return;
+    }
+
+    setStep("processing");
     setErrorMsg("");
     setResult(null);
+    startProgressSimulation();
 
-    // Create a job record in Supabase (best-effort — don't block on failure)
+    // Create a job record in Supabase (best-effort)
     let jobId: string | null = null;
     try {
       const job = await createJob({
@@ -52,11 +158,18 @@ export function ToolModal({ tool, onClose }: Props) {
     }
 
     try {
-      const res = await processTool(tool.id, files, {}, (pct) =>
-        setProgress(Math.round(pct))
-      );
+      const res = await processTool(tool.id, files, {}, (pct) => {
+        // Only apply real pct when it's below our simulated value
+        setProgress((prev) => Math.max(prev, Math.round(pct * 0.9)));
+      });
+
+      stopProgressSimulation();
+      // Jump to 100
+      setProgress(100);
       setResult(res);
       setStep("done");
+
+      toast("File processed successfully!", "success");
 
       // Mark job as done
       if (jobId) {
@@ -66,10 +179,16 @@ export function ToolModal({ tool, onClose }: Props) {
           output_path: res.filename,
         }).catch(() => {});
       }
+
+      // Refresh plan usage count
+      refetch();
     } catch (err: unknown) {
+      stopProgressSimulation();
       const msg = err instanceof Error ? err.message : "Processing failed. Please try again.";
       setErrorMsg(msg);
       setStep("error");
+
+      toast(msg, "error");
 
       if (jobId) {
         await updateJob(jobId, {
@@ -90,6 +209,7 @@ export function ToolModal({ tool, onClose }: Props) {
     setProgress(0);
     setResult(null);
     setErrorMsg("");
+    setValidationError("");
   };
 
   return (
@@ -119,6 +239,16 @@ export function ToolModal({ tool, onClose }: Props) {
         <div className="px-6 py-6">
           {step === "upload" && (
             <>
+              {/* Usage warning for free plan near limit */}
+              {!isPro && canUseTools && jobsToday >= 3 && (
+                <div className="mb-4 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm text-amber-700">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  {5 - jobsToday} free tool{5 - jobsToday === 1 ? "" : "s"} remaining today.
+                </div>
+              )}
+
               {/* Drop zone */}
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -141,7 +271,10 @@ export function ToolModal({ tool, onClose }: Props) {
                     <p className="font-semibold text-gray-800 text-sm">
                       {dragging ? "Drop your files here" : "Select files or drag & drop"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">PDF files supported · Up to 100MB</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      PDF files supported · Up to {maxFileSizeLabel}
+                      {isPro ? " (Pro)" : ""}
+                    </p>
                   </div>
                   <button
                     type="button"
@@ -160,6 +293,16 @@ export function ToolModal({ tool, onClose }: Props) {
                   onChange={(e) => handleFiles(e.target.files)}
                 />
               </div>
+
+              {/* Validation error */}
+              {validationError && (
+                <div className="mt-3 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-700">
+                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {validationError}
+                </div>
+              )}
 
               {/* File list */}
               {files.length > 0 && (
