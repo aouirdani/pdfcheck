@@ -125,7 +125,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: Props) {
                     </span>
                   </div>
                   <div className="text-xs font-bold text-orange-500 uppercase tracking-wider mb-2">Pro</div>
-                  <div className="text-xl font-extrabold text-gray-800 mb-3">$7<span className="text-sm font-medium text-gray-400">/mo</span></div>
+                  <div className="text-xl font-extrabold text-gray-800 mb-3">€9.99<span className="text-sm font-medium text-gray-400">/mo</span></div>
                   <ul className="space-y-1.5 text-xs text-gray-600">
                     <li className="flex items-center gap-1.5">
                       <span className="text-green-500">✓</span> Unlimited tools
@@ -160,7 +160,7 @@ export function UpgradeModal({ isOpen, onClose, reason }: Props) {
               onClick={handleGetPremium}
               className="w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold text-sm transition shadow-md shadow-orange-200"
             >
-              Get Premium — $7/mo
+              Get Pro — €9.99/mo
             </button>
           )}
 

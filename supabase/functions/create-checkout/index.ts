@@ -1,104 +1,101 @@
+// Supabase Edge Function: create-checkout
+// Creates a Stripe Checkout Session for subscription.
+// Body: { priceId: string, successUrl?: string, cancelUrl?: string }
+
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
+const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders, status: 204 });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+
+  const anonClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+  const { data: { user }, error: authError } = await anonClient.auth.getUser();
+  if (authError || !user) return json({ error: "Unauthorized" }, 401);
+
+  // ── Body ──────────────────────────────────────────────────────────────────
+  const { priceId, successUrl, cancelUrl } = await req.json() as {
+    priceId: string;
+    successUrl?: string;
+    cancelUrl?: string;
+  };
+
+  if (!priceId) return json({ error: "priceId is required" }, 400);
+
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!stripeKey) return json({ error: "Stripe is not configured" }, 500);
+
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: "2023-10-16",
+    httpClient: Stripe.createFetchHttpClient(),
+  });
+
+  // ── Find or create Stripe customer ────────────────────────────────────────
+  const adminClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+
+  const { data: profile } = await adminClient
+    .from("profiles")
+    .select("stripe_customer_id")
+    .eq("id", user.id)
+    .single();
+
+  let customerId = (profile as { stripe_customer_id?: string } | null)?.stripe_customer_id;
+
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      email: user.email,
+      metadata: { supabase_user_id: user.id },
+    });
+    customerId = customer.id;
+    await adminClient
+      .from("profiles")
+      .update({ stripe_customer_id: customerId })
+      .eq("id", user.id);
   }
 
+  // ── Create Checkout session ───────────────────────────────────────────────
+  const origin = req.headers.get("origin") ?? "https://pdf-tool-website-review.vercel.app";
+
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Get user from Supabase
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { plan, successUrl, cancelUrl } = await req.json();
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2024-06-20",
-    });
-
-    const priceIds: Record<string, string> = {
-      premium: Deno.env.get("STRIPE_PRICE_PREMIUM") ?? "",
-      team: Deno.env.get("STRIPE_PRICE_TEAM") ?? "",
-    };
-
-    const priceId = priceIds[plan];
-    if (!priceId) {
-      return new Response(JSON.stringify({ error: `Unknown plan: ${plan}` }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Find or create Stripe customer
-    const adminSupabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-
-    const { data: profile } = await adminSupabase
-      .from("profiles")
-      .select("stripe_customer_id")
-      .eq("id", user.id)
-      .single();
-
-    let customerId = profile?.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: { supabase_user_id: user.id },
-      });
-      customerId = customer.id;
-      await adminSupabase
-        .from("profiles")
-        .update({ stripe_customer_id: customerId })
-        .eq("id", user.id);
-    }
-
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: successUrl ?? `${req.headers.get("origin")}?checkout=success`,
-      cancel_url: cancelUrl ?? `${req.headers.get("origin")}?checkout=cancelled`,
-      metadata: { supabase_user_id: user.id, plan },
+      success_url: successUrl ?? `${origin}?checkout=success`,
+      cancel_url: cancelUrl ?? `${origin}?checkout=cancelled`,
+      metadata: { supabase_user_id: user.id },
+      allow_promotion_codes: true,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err) {
+    return json({ url: session.url });
+  } catch (err: unknown) {
     console.error("create-checkout error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });

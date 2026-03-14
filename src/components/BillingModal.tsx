@@ -33,7 +33,7 @@ export function BillingModal({ isOpen, onClose }: Props) {
       if (!session) throw new Error("Not authenticated");
 
       const { data: fnData, error: fnError } = await (supabase as any).functions.invoke(
-        "create-portal",
+        "billing-portal",
         {
           body: { returnUrl: window.location.href },
           headers: { Authorization: `Bearer ${session.access_token}` },
@@ -181,7 +181,7 @@ export function BillingModal({ isOpen, onClose }: Props) {
               onClick={handleUpgrade}
               className="w-full py-3 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white font-bold text-sm transition shadow-md shadow-orange-200"
             >
-              Upgrade to Pro — $7/mo
+              Upgrade to Pro — €9.99/mo
             </button>
           )}
         </div>
