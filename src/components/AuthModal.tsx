@@ -57,7 +57,12 @@ export function AuthModal({ isOpen, onClose }: Props) {
     try {
       await signInWithGoogle();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Something went wrong";
+      let msg = err instanceof Error ? err.message : "Something went wrong";
+      // Supabase sometimes returns JSON strings as the error message — parse them
+      try {
+        const parsed = JSON.parse(msg);
+        msg = parsed.msg ?? parsed.message ?? msg;
+      } catch { /* not JSON, use as-is */ }
       const isNotConfigured =
         msg.toLowerCase().includes("provider") ||
         msg.toLowerCase().includes("not supported") ||
