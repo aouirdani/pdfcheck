@@ -2,7 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 
-const FREE_DAILY_LIMIT = 5;
+export const PLAN_LIMITS = {
+  free:    { dailyLimit: 5,        maxFileMb: 25,   watermark: true,  ocr: false, label: "Free" },
+  starter: { dailyLimit: 50,       maxFileMb: 100,  watermark: false, ocr: false, label: "Starter" },
+  premium: { dailyLimit: Infinity, maxFileMb: 500,  watermark: false, ocr: true,  label: "Pro" },
+  team:    { dailyLimit: Infinity, maxFileMb: 1024, watermark: false, ocr: true,  label: "Team" },
+} as const;
+
+export type PlanKey = keyof typeof PLAN_LIMITS;
+
 const ANON_DAILY_LIMIT = 3;
 
 interface PlanState {
@@ -13,6 +21,8 @@ interface PlanState {
   isPro: boolean;
   canUseTools: boolean;
   remainingToday: number;
+  maxFileMb: number;
+  watermark: boolean;
 }
 
 export interface UsePlanResult extends PlanState {
@@ -33,14 +43,14 @@ export function usePlan(): UsePlanResult {
     isPro: false,
     canUseTools: true,
     remainingToday: ANON_DAILY_LIMIT,
+    maxFileMb: PLAN_LIMITS.free.maxFileMb,
+    watermark: true,
   });
 
   const fetchPlan = useCallback(async () => {
     setState((prev) => ({ ...prev, loading: true }));
 
     if (!user) {
-      // Anonymous — allow up to ANON_DAILY_LIMIT
-      // We can't track truly without auth, so we allow access optimistically
       setState({
         plan: null,
         jobsToday: 0,
@@ -49,12 +59,13 @@ export function usePlan(): UsePlanResult {
         isPro: false,
         canUseTools: true,
         remainingToday: ANON_DAILY_LIMIT,
+        maxFileMb: PLAN_LIMITS.free.maxFileMb,
+        watermark: true,
       });
       return;
     }
 
     try {
-      // Fetch profile
       const { data: profile } = await db
         .from("profiles")
         .select("plan, jobs_this_month")
@@ -63,10 +74,9 @@ export function usePlan(): UsePlanResult {
 
       const plan: string = profile?.plan ?? "free";
       const jobsThisMonth: number = profile?.jobs_this_month ?? 0;
-      // DB plan check constraint only allows: 'free', 'premium', 'team'
       const isPro = plan === "premium" || plan === "team";
+      const limits = PLAN_LIMITS[plan as PlanKey] ?? PLAN_LIMITS.free;
 
-      // Count today's completed jobs
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
@@ -79,16 +89,10 @@ export function usePlan(): UsePlanResult {
 
       const jobsToday = count ?? 0;
 
-      let canUseTools: boolean;
-      let remainingToday: number;
-
-      if (isPro) {
-        canUseTools = true;
-        remainingToday = Infinity;
-      } else {
-        remainingToday = Math.max(0, FREE_DAILY_LIMIT - jobsToday);
-        canUseTools = jobsToday < FREE_DAILY_LIMIT;
-      }
+      const canUseTools = limits.dailyLimit === Infinity || jobsToday < limits.dailyLimit;
+      const remainingToday = limits.dailyLimit === Infinity
+        ? Infinity
+        : Math.max(0, limits.dailyLimit - jobsToday);
 
       setState({
         plan,
@@ -98,9 +102,10 @@ export function usePlan(): UsePlanResult {
         isPro,
         canUseTools,
         remainingToday,
+        maxFileMb: limits.maxFileMb,
+        watermark: limits.watermark,
       });
     } catch {
-      // On error, allow usage (fail open)
       setState({
         plan: "free",
         jobsToday: 0,
@@ -108,7 +113,9 @@ export function usePlan(): UsePlanResult {
         loading: false,
         isPro: false,
         canUseTools: true,
-        remainingToday: FREE_DAILY_LIMIT,
+        remainingToday: PLAN_LIMITS.free.dailyLimit,
+        maxFileMb: PLAN_LIMITS.free.maxFileMb,
+        watermark: true,
       });
     }
   }, [user]);
