@@ -28,7 +28,7 @@ const features = [
       </svg>
     ),
     title: "Works on Any Device",
-    desc: "Use iLovePDF on desktop, tablet or mobile. It works perfectly on any browser.",
+    desc: "Use PDFcheck on desktop, tablet or mobile. It works perfectly on any browser.",
     color: "text-blue-500",
     bg: "bg-blue-50",
   },
@@ -39,7 +39,7 @@ const features = [
       </svg>
     ),
     title: "No Installation",
-    desc: "Simply use iLovePDF in your browser. No software to download or install.",
+    desc: "Simply use PDFcheck in your browser. No software to download or install.",
     color: "text-purple-500",
     bg: "bg-purple-50",
   },
@@ -72,7 +72,7 @@ export function Features() {
     <section id="features" className="py-16 px-4 bg-white border-b border-gray-100">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Why iLovePDF?</h2>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3">Why PDFcheck?</h2>
           <p className="text-gray-500 max-w-xl mx-auto text-sm">
             The most powerful and reliable online PDF tools, trusted by millions of users around the world.
           </p>
