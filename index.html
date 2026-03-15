@@ -8,6 +8,33 @@
     <meta property="og:title" content="PDFcheck – Online PDF Tools" />
     <meta property="og:description" content="Free online PDF tools for everyone. No signup required." />
     <meta name="theme-color" content="#ef4444" />
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Apple touch icons -->
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="PDFcheck" />
+    <!-- Plausible analytics -->
+    <script defer data-domain="pdf-tool-website-review.vercel.app" src="https://plausible.io/js/script.js"></script>
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="PDFcheck – Online PDF Tools" />
+    <meta name="twitter:description" content="Free online PDF tools. Merge, split, compress, convert PDFs instantly." />
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "PDFcheck",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Web",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "description": "Free online PDF tools — merge, split, compress, convert PDFs.",
+      "url": "https://pdf-tool-website-review.vercel.app"
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -73,7 +73,21 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
               <a href="#features" className="px-3 py-1.5 rounded-md hover:bg-gray-100 transition">Features</a>
               <a href="#pricing" className="px-3 py-1.5 rounded-md hover:bg-gray-100 transition">Pricing</a>
 
-              {/* History button for logged-in users */}
+              {/* Dashboard + History for logged-in users */}
+              {user && (
+                <a
+                  href="/dashboard"
+                  className="px-3 py-1.5 rounded-md hover:bg-gray-100 transition flex items-center gap-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </svg>
+                  Dashboard
+                </a>
+              )}
               {user && (
                 <button
                   onClick={onHistory}
@@ -236,6 +250,13 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
                   )}
                   <span className="text-xs text-gray-500 truncate">{user.email}</span>
                 </div>
+                <a
+                  href="/dashboard"
+                  className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
                 {onHistory && (
                   <button
                     onClick={() => { onHistory(); setMenuOpen(false); }}

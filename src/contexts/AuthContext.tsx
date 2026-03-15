@@ -2,6 +2,13 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { supabase } from "../lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
+// Helper to redirect after login
+function redirectAfterAuth() {
+  if (window.location.pathname === "/" || window.location.pathname === "") {
+    window.location.href = "/dashboard";
+  }
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -33,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    redirectAfterAuth();
   };
 
   const signUp = async (email: string, password: string, name?: string) => {
@@ -42,12 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: { data: { full_name: name } },
     });
     if (error) throw error;
+    redirectAfterAuth();
   };
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     });
     if (error) throw error;
   };

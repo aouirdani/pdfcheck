@@ -1,0 +1,19 @@
+{
+  "name": "PDFcheck",
+  "short_name": "PDFcheck",
+  "description": "Free online PDF tools — merge, split, compress, convert PDFs instantly",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ef4444",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "utilities"],
+  "shortcuts": [
+    { "name": "Merge PDF", "url": "/#merge", "description": "Merge multiple PDFs" },
+    { "name": "Compress PDF", "url": "/#compress", "description": "Compress PDF files" }
+  ]
+}

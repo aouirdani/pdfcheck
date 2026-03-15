@@ -26,6 +26,8 @@ export function Pricing() {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState("");
 
   const handleCheckout = async (planKey: "starter" | "pro" | "team") => {
     if (!user) {
@@ -50,8 +52,10 @@ export function Pricing() {
         },
         body: JSON.stringify({
           priceId,
-          successUrl: `${window.location.origin}?checkout=success`,
-          cancelUrl: `${window.location.origin}?checkout=cancelled`,
+          successUrl: `${window.location.origin}/dashboard?checkout=success`,
+          cancelUrl: `${window.location.origin}/?checkout=cancelled`,
+          promoCode: promoApplied || undefined,
+          trial: !currentPlan || currentPlan === "free",
         }),
       });
 
@@ -193,6 +197,30 @@ export function Pricing() {
             </button>
           </div>
 
+          {/* Promo code */}
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <input
+              type="text"
+              placeholder="Promo code"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              className="px-3 py-1.5 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-red-300 w-32"
+            />
+            <button
+              onClick={() => {
+                if (promoCode) { setPromoApplied(promoCode); setError(""); }
+              }}
+              className="px-4 py-1.5 text-sm bg-gray-800 text-white rounded-full hover:bg-gray-700 transition"
+            >
+              Apply
+            </button>
+            {promoApplied && (
+              <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-1 rounded-full">
+                ✓ {promoApplied} applied
+              </span>
+            )}
+          </div>
+
           {error && (
             <p className="mt-4 text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg inline-block">{error}</p>
           )}
@@ -254,7 +282,9 @@ export function Pricing() {
                     >
                       {loading === plan.key
                         ? "Loading…"
-                        : `Get ${plan.name}${billing === "yearly" ? ` (Save ${plan.yearSave})` : ""}`}
+                        : (!currentPlan || currentPlan === "free")
+                          ? `Try ${plan.name} Free — 7 days`
+                          : `Get ${plan.name}${billing === "yearly" ? ` (Save ${plan.yearSave})` : ""}`}
                     </button>
                   )}
                 </div>
