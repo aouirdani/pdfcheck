@@ -66,24 +66,28 @@ Deno.serve(async (req) => {
 
   let customerId = (profile as { stripe_customer_id?: string } | null)?.stripe_customer_id;
 
-  if (!customerId) {
+  const createCustomer = async () => {
     const customer = await stripe.customers.create({
       email: user.email,
       metadata: { supabase_user_id: user.id },
     });
-    customerId = customer.id;
     await adminClient
       .from("profiles")
-      .update({ stripe_customer_id: customerId })
+      .update({ stripe_customer_id: customer.id })
       .eq("id", user.id);
+    return customer.id;
+  };
+
+  if (!customerId) {
+    customerId = await createCustomer();
   }
 
   // ── Create Checkout session ───────────────────────────────────────────────
   const origin = req.headers.get("origin") ?? "https://pdf-tool-website-review.vercel.app";
 
-  try {
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+  const createSession = (cid: string) =>
+    stripe.checkout.sessions.create({
+      customer: cid,
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
@@ -93,9 +97,24 @@ Deno.serve(async (req) => {
       allow_promotion_codes: true,
     });
 
+  try {
+    const session = await createSession(customerId);
     return json({ url: session.url });
   } catch (err: unknown) {
-    console.error("create-checkout error:", err);
+    // Stale customer ID (e.g. live-mode ID used with test key) — recreate and retry once
+    const stripeErr = err as { code?: string; statusCode?: number };
+    if (stripeErr.code === "resource_missing" || stripeErr.statusCode === 404) {
+      console.error("Stale Stripe customer, recreating:", customerId);
+      try {
+        customerId = await createCustomer();
+        const session = await createSession(customerId);
+        return json({ url: session.url });
+      } catch (retryErr: unknown) {
+        console.error("Retry failed:", retryErr);
+        return json({ error: retryErr instanceof Error ? retryErr.message : String(retryErr) }, 500);
+      }
+    }
+    console.error("Stripe checkout error:", err);
     return json({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });
