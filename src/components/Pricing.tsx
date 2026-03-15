@@ -28,18 +28,22 @@ export function Pricing() {
         return;
       }
 
-      const { data, error } = await (supabase as any).functions.invoke("create-checkout", {
-        body: {
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           priceId,
           successUrl: `${window.location.origin}?checkout=success`,
           cancelUrl: `${window.location.origin}?checkout=cancelled`,
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        }),
       });
 
-      if (error) throw new Error(error.message ?? "Checkout failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? `Server error ${res.status}`);
       if (data?.url) window.location.href = data.url;
       else throw new Error(data?.error ?? "No checkout URL returned");
     } catch (err) {
