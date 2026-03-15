@@ -64,11 +64,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-gray-800/70 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex flex-col sm:flex-row items-center gap-2 text-gray-500">
-            <p>© {year} PDFcheck. All rights reserved.</p>
-            <span className="hidden sm:inline text-gray-700">·</span>
-            <p className="text-gray-600">Made with ❤️ in Morocco</p>
-          </div>
+          <p className="text-gray-500">© {year} PDFcheck. All rights reserved.</p>
 
           <div className="flex items-center gap-4 flex-wrap justify-center">
             <span className="flex items-center gap-1.5 text-gray-500">
