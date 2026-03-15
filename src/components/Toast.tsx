@@ -1,66 +1,22 @@
 import { useEffect, useRef, useState } from "react";
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { toastBus, type Toast } from "../lib/toast";
 
 const DEFAULT_DURATION = 3500;
 const MAX_TOASTS = 5;
 
-const typeStyles: Record<Toast["type"], {
-  bar: string; icon: JSX.Element; bg: string; border: string; title: string; iconBg: string;
-}> = {
-  success: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-emerald-200 dark:border-emerald-800",
-    bar: "bg-emerald-500",
-    iconBg: "bg-emerald-50 dark:bg-emerald-950/50",
-    title: "text-gray-900 dark:text-gray-100",
-    icon: (
-      <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  error: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-red-200 dark:border-red-800",
-    bar: "bg-red-500",
-    iconBg: "bg-red-50 dark:bg-red-950/50",
-    title: "text-gray-900 dark:text-gray-100",
-    icon: (
-      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  info: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-indigo-200 dark:border-indigo-800",
-    bar: "bg-indigo-500",
-    iconBg: "bg-indigo-50 dark:bg-indigo-950/50",
-    title: "text-gray-900 dark:text-gray-100",
-    icon: (
-      <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  warning: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-amber-200 dark:border-amber-800",
-    bar: "bg-amber-400",
-    iconBg: "bg-amber-50 dark:bg-amber-950/50",
-    title: "text-gray-900 dark:text-gray-100",
-    icon: (
-      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-    ),
-  },
-};
+const TYPE_CONFIG = {
+  success: { icon: CheckCircle, color: "#059669", bg: "#f0fdf4", border: "#bbf7d0" },
+  error:   { icon: AlertCircle, color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+  info:    { icon: Info,         color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+  warning: { icon: AlertTriangle,color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+} as const;
 
 interface ToastItem extends Toast { visible: boolean; }
 
 function ToastItem({ item, onDismiss }: { item: ToastItem; onDismiss: (id: string) => void }) {
-  const styles = typeStyles[item.type];
+  const cfg = TYPE_CONFIG[item.type];
+  const Icon = cfg.icon;
   const duration = item.duration ?? DEFAULT_DURATION;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,39 +27,64 @@ function ToastItem({ item, onDismiss }: { item: ToastItem; onDismiss: (id: strin
 
   return (
     <div
-      className={`relative flex items-start gap-3 ${styles.bg} border ${styles.border} rounded-2xl shadow-lg dark:shadow-black/30 px-4 py-3.5 max-w-sm w-full overflow-hidden
-        transition-all duration-300 ease-out
-        ${item.visible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"}`}
       role="alert"
       aria-live="assertive"
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 10,
+        background: "var(--color-bg)",
+        border: "1px solid var(--color-border)",
+        borderLeft: `3px solid ${cfg.color}`,
+        borderRadius: 8,
+        padding: "12px 14px",
+        maxWidth: 360,
+        width: "100%",
+        boxShadow: "var(--shadow-md)",
+        transition: "opacity 0.2s ease, transform 0.2s ease",
+        opacity: item.visible ? 1 : 0,
+        transform: item.visible ? "translateX(0)" : "translateX(16px)",
+      }}
     >
-      {/* Bottom progress bar */}
-      <div
-        className={`absolute bottom-0 left-0 h-0.5 ${styles.bar} rounded-full`}
+      <Icon size={16} strokeWidth={2} style={{ color: cfg.color, flexShrink: 0, marginTop: 1 }} />
+      <p style={{ flex: 1, fontSize: 13, lineHeight: 1.5, color: "var(--color-text-primary)" }}>
+        {item.message}
+      </p>
+      <button
+        onClick={() => onDismiss(item.id)}
+        aria-label="Dismiss"
         style={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 20,
+          height: 20,
+          borderRadius: 4,
+          border: "none",
+          background: "transparent",
+          color: "var(--color-text-muted)",
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        <X size={12} strokeWidth={2} />
+      </button>
+
+      {/* Progress bar */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: 2,
+          borderRadius: "0 0 0 8px",
+          background: cfg.color,
+          opacity: 0.4,
           animation: `shrink ${duration}ms linear forwards`,
           width: "100%",
         }}
       />
-
-      {/* Icon */}
-      <div className={`w-8 h-8 rounded-xl ${styles.iconBg} flex items-center justify-center flex-shrink-0`}>
-        {styles.icon}
-      </div>
-
-      <p className={`text-sm font-medium ${styles.title} flex-1 leading-snug pr-2 pt-1`}>
-        {item.message}
-      </p>
-
-      <button
-        onClick={() => onDismiss(item.id)}
-        className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mt-1"
-        aria-label="Dismiss"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
     </div>
   );
 }
@@ -124,15 +105,28 @@ export function ToastContainer() {
 
   const dismiss = (id: string) => {
     setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, visible: false } : t)));
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 350);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 250);
   };
 
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 items-end pointer-events-none" aria-label="Notifications">
+    <div
+      aria-label="Notifications"
+      style={{
+        position: "fixed",
+        top: 16,
+        right: 16,
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        alignItems: "flex-end",
+        pointerEvents: "none",
+      }}
+    >
       {toasts.map((item) => (
-        <div key={item.id} className="pointer-events-auto">
+        <div key={item.id} style={{ pointerEvents: "auto", position: "relative" }}>
           <ToastItem item={item} onDismiss={dismiss} />
         </div>
       ))}

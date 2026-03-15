@@ -1,14 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+import {
+  ArrowLeft, BarChart2, Clock, CreditCard, Settings, Layers, Minimize2,
+  FileText, Scissors, ScanText, Stamp, ChevronRight,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { usePlan, PLAN_LIMITS, type PlanKey } from "../hooks/usePlan";
@@ -59,9 +57,7 @@ function relativeTime(iso: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    year: "numeric", month: "short", day: "numeric",
   });
 }
 
@@ -71,115 +67,92 @@ function daysUntil(iso: string | null | undefined): number | null {
   return Math.max(0, Math.ceil(diff / 86400000));
 }
 
-function planColor(plan: string): string {
-  switch (plan) {
-    case "premium":
-      return "bg-purple-100 text-purple-700 border-purple-200";
-    case "team":
-      return "bg-blue-100 text-blue-700 border-blue-200";
-    case "starter":
-      return "bg-amber-100 text-amber-700 border-amber-200";
-    default:
-      return "bg-gray-100 text-gray-600 border-gray-200";
-  }
-}
-
 function planLabel(plan: string): string {
   return PLAN_LIMITS[plan as PlanKey]?.label ?? "Free";
 }
 
 function toolLabel(tool: string): string {
   const map: Record<string, string> = {
-    merge: "Merge PDF",
-    split: "Split PDF",
-    compress: "Compress PDF",
-    rotate: "Rotate PDF",
-    reorder: "Reorder Pages",
-    "add-pages": "Add Pages",
-    "jpg-to-pdf": "JPG to PDF",
-    "word-to-pdf": "Word to PDF",
-    "powerpoint-to-pdf": "PPT to PDF",
-    "excel-to-pdf": "Excel to PDF",
-    "html-to-pdf": "HTML to PDF",
-    "pdf-to-jpg": "PDF to JPG",
-    "pdf-to-word": "PDF to Word",
-    "pdf-to-ppt": "PDF to PPT",
-    "pdf-to-excel": "PDF to Excel",
-    "edit-pdf": "Edit PDF",
-    watermark: "Watermark",
-    sign: "Sign PDF",
-    annotate: "Annotate PDF",
-    protect: "Protect PDF",
-    unlock: "Unlock PDF",
-    ocr: "OCR",
+    merge: "Merge PDF", split: "Split PDF", compress: "Compress PDF",
+    rotate: "Rotate PDF", reorder: "Reorder Pages", "add-pages": "Add Pages",
+    "jpg-to-pdf": "JPG to PDF", "word-to-pdf": "Word to PDF",
+    "powerpoint-to-pdf": "PPT to PDF", "excel-to-pdf": "Excel to PDF",
+    "html-to-pdf": "HTML to PDF", "pdf-to-jpg": "PDF to JPG",
+    "pdf-to-word": "PDF to Word", "pdf-to-ppt": "PDF to PPT",
+    "pdf-to-excel": "PDF to Excel", "edit-pdf": "Edit PDF",
+    watermark: "Watermark", sign: "Sign PDF", annotate: "Annotate PDF",
+    protect: "Protect PDF", unlock: "Unlock PDF", ocr: "OCR",
     "page-numbers": "Page Numbers",
   };
   return map[tool] ?? tool;
 }
 
 // ---------------------------------------------------------------------------
-// Skeleton loader
+// Sub-components
 // ---------------------------------------------------------------------------
 
-function Skeleton({ className }: { className?: string }) {
+function Skeleton({ style }: { style?: React.CSSProperties }) {
   return (
     <div
-      className={`animate-pulse bg-gray-200 rounded-lg ${className ?? ""}`}
+      style={{
+        background: "var(--color-border)",
+        borderRadius: 6,
+        animation: "pulse 1.5s ease-in-out infinite",
+        ...style,
+      }}
     />
   );
 }
 
-// ---------------------------------------------------------------------------
-// Stat Card
-// ---------------------------------------------------------------------------
-
 function StatCard({
-  label,
-  value,
-  sub,
-  icon,
-  loading,
+  label, value, sub, icon, loading,
 }: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: React.ReactNode;
-  loading: boolean;
+  label: string; value: string; sub?: string; icon: React.ReactNode; loading: boolean;
 }) {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <Skeleton className="h-4 w-24 mb-3" />
-        <Skeleton className="h-7 w-32 mb-2" />
-        <Skeleton className="h-3 w-20" />
+      <div style={{ background: "var(--color-bg)", border: "1px solid var(--color-border)", borderRadius: 8, padding: "20px" }}>
+        <Skeleton style={{ height: 12, width: 80, marginBottom: 12 }} />
+        <Skeleton style={{ height: 24, width: 100, marginBottom: 8 }} />
+        <Skeleton style={{ height: 10, width: 60 }} />
       </div>
     );
   }
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+    <div
+      style={{
+        background: "var(--color-bg)",
+        border: "1px solid var(--color-border)",
+        borderRadius: 8,
+        padding: "20px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
           {label}
         </span>
-        <span className="text-gray-300">{icon}</span>
+        <span style={{ color: "var(--color-text-muted)" }}>{icon}</span>
       </div>
-      <div className="text-2xl font-bold text-gray-800">{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+      <div style={{ fontSize: 22, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 4 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{sub}</div>}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Quick actions config
-// ---------------------------------------------------------------------------
-
 const QUICK_ACTIONS = [
-  { id: "merge", label: "Merge PDF", icon: "⊕" },
-  { id: "compress", label: "Compress PDF", icon: "⊖" },
-  { id: "pdf-to-word", label: "PDF to Word", icon: "W" },
-  { id: "split", label: "Split PDF", icon: "✂" },
-  { id: "ocr", label: "OCR", icon: "T" },
-  { id: "watermark", label: "Watermark", icon: "≋" },
+  { id: "merge",       label: "Merge PDF",    Icon: Layers    },
+  { id: "compress",    label: "Compress PDF", Icon: Minimize2 },
+  { id: "pdf-to-word", label: "PDF to Word",  Icon: FileText  },
+  { id: "split",       label: "Split PDF",    Icon: Scissors  },
+  { id: "ocr",         label: "OCR",          Icon: ScanText  },
+  { id: "watermark",   label: "Watermark",    Icon: Stamp     },
+];
+
+const NAV_ITEMS: { id: ActiveSection; label: string; Icon: React.ElementType }[] = [
+  { id: "overview", label: "Overview",     Icon: BarChart2  },
+  { id: "files",    label: "Recent Files", Icon: Clock      },
+  { id: "billing",  label: "Billing",      Icon: CreditCard },
+  { id: "settings", label: "Settings",     Icon: Settings   },
 ];
 
 // ---------------------------------------------------------------------------
@@ -196,7 +169,6 @@ export function Dashboard() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // Settings forms
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailMsg, setEmailMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -209,18 +181,13 @@ export function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Sidebar/tab navigation
   const [activeSection, setActiveSection] = useState<ActiveSection>("overview");
   const sectionRefs = {
     overview: useRef<HTMLDivElement>(null),
-    files: useRef<HTMLDivElement>(null),
-    billing: useRef<HTMLDivElement>(null),
+    files:    useRef<HTMLDivElement>(null),
+    billing:  useRef<HTMLDivElement>(null),
     settings: useRef<HTMLDivElement>(null),
   };
-
-  // ---------------------------------------------------------------------------
-  // Redirect if unauthenticated
-  // ---------------------------------------------------------------------------
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -229,55 +196,33 @@ export function Dashboard() {
     }
   }, [authLoading, user, navigate]);
 
-  // ---------------------------------------------------------------------------
-  // Data fetching
-  // ---------------------------------------------------------------------------
-
   useEffect(() => {
     if (!user) return;
 
     async function fetchData() {
       setDataLoading(true);
-
       try {
-        // Profile
         const { data: profileData } = await (supabase as any)
-          .from("profiles")
-          .select("*")
-          .eq("id", user!.id)
-          .single();
-
+          .from("profiles").select("*").eq("id", user!.id).single();
         if (profileData) setProfile(profileData as Profile);
 
-        // Recent jobs
         const { data: jobsData } = await (supabase as any)
-          .from("jobs")
-          .select("*")
-          .eq("user_id", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(5);
-
+          .from("jobs").select("*").eq("user_id", user!.id)
+          .order("created_at", { ascending: false }).limit(5);
         if (jobsData) setRecentJobs(jobsData as Job[]);
 
-        // Usage chart — last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
         const { data: usageData } = await (supabase as any)
-          .from("jobs")
-          .select("created_at")
-          .eq("user_id", user!.id)
+          .from("jobs").select("created_at").eq("user_id", user!.id)
           .gte("created_at", thirtyDaysAgo.toISOString());
 
         if (usageData) {
-          // Build a map of date -> count
           const counts: Record<string, number> = {};
           (usageData as { created_at: string }[]).forEach(({ created_at }) => {
             const day = created_at.slice(0, 10);
             counts[day] = (counts[day] ?? 0) + 1;
           });
-
-          // Fill all 30 days
           const points: ChartPoint[] = [];
           for (let i = 29; i >= 0; i--) {
             const d = new Date();
@@ -291,7 +236,7 @@ export function Dashboard() {
           setChartData(points);
         }
       } catch {
-        // silently fail — data will just be empty
+        // silently fail
       } finally {
         setDataLoading(false);
       }
@@ -300,19 +245,13 @@ export function Dashboard() {
     fetchData();
   }, [user]);
 
-  // ---------------------------------------------------------------------------
-  // Intersection observer for active section tracking
-  // ---------------------------------------------------------------------------
-
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
     (Object.entries(sectionRefs) as [ActiveSection, React.RefObject<HTMLDivElement>][]).forEach(
       ([key, ref]) => {
         if (!ref.current) return;
         const obs = new IntersectionObserver(
-          ([entry]) => {
-            if (entry.isIntersecting) setActiveSection(key);
-          },
+          ([entry]) => { if (entry.isIntersecting) setActiveSection(key); },
           { rootMargin: "-40% 0px -50% 0px" }
         );
         obs.observe(ref.current);
@@ -323,10 +262,6 @@ export function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
-
   function scrollTo(section: ActiveSection) {
     sectionRefs[section].current?.scrollIntoView({ behavior: "smooth", block: "start" });
     setActiveSection(section);
@@ -335,9 +270,7 @@ export function Dashboard() {
   function openTool(toolId: string) {
     navigate("/");
     setTimeout(() => {
-      window.dispatchEvent(
-        new CustomEvent("open-tool", { detail: { toolId } })
-      );
+      window.dispatchEvent(new CustomEvent("open-tool", { detail: { toolId } }));
     }, 100);
   }
 
@@ -351,8 +284,7 @@ export function Dashboard() {
       setEmailMsg({ ok: true, text: "Confirmation email sent. Check your inbox." });
       setNewEmail("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update email.";
-      setEmailMsg({ ok: false, text: msg });
+      setEmailMsg({ ok: false, text: err instanceof Error ? err.message : "Failed to update email." });
     } finally {
       setEmailSaving(false);
     }
@@ -376,21 +308,16 @@ export function Dashboard() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update password.";
-      setPwMsg({ ok: false, text: msg });
+      setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Failed to update password." });
     } finally {
       setPwSaving(false);
     }
   }
 
   async function handleDeleteAccount() {
-    if (!deleteConfirm) {
-      setDeleteConfirm(true);
-      return;
-    }
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
     setDeleting(true);
     try {
-      // Sign out — in production you would call a server function to delete the account
       await signOut();
       navigate("/");
     } catch {
@@ -398,16 +325,12 @@ export function Dashboard() {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Loading / unauthenticated guard
-  // ---------------------------------------------------------------------------
-
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Loading dashboard…</p>
+      <div style={{ minHeight: "100vh", background: "var(--color-bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 28, height: 28, border: "2px solid var(--color-accent)", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite", margin: "0 auto 12px" }} />
+          <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>Loading…</p>
         </div>
       </div>
     );
@@ -415,91 +338,119 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  // ---------------------------------------------------------------------------
-  // Derived values
-  // ---------------------------------------------------------------------------
-
-  const displayName =
-    profile?.full_name ||
-    user.user_metadata?.full_name ||
-    user.email?.split("@")[0] ||
-    "User";
-
+  const displayName = profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const currentPlan = profile?.plan ?? plan ?? "free";
   const dailyLimit = PLAN_LIMITS[currentPlan as PlanKey]?.dailyLimit ?? 5;
-  const dailyLimitLabel =
-    dailyLimit === Infinity ? "Unlimited" : String(dailyLimit);
-
+  const dailyLimitLabel = dailyLimit === Infinity ? "Unlimited" : String(dailyLimit);
   const daysLeft = daysUntil((profile as any)?.current_period_end);
   const memberSince = profile?.created_at ? formatDate(profile.created_at) : "—";
-
   const loading = dataLoading || planLoading;
 
-  // ---------------------------------------------------------------------------
-  // Sidebar nav items
-  // ---------------------------------------------------------------------------
+  const inputStyle: React.CSSProperties = {
+    height: 38,
+    padding: "0 12px",
+    fontSize: 13,
+    border: "1px solid var(--color-border)",
+    borderRadius: 6,
+    background: "var(--color-bg)",
+    color: "var(--color-text-primary)",
+    outline: "none",
+    width: "100%",
+    boxSizing: "border-box",
+  };
 
-  const navItems: { id: ActiveSection; label: string }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "files", label: "Recent Files" },
-    { id: "billing", label: "Billing" },
-    { id: "settings", label: "Settings" },
-  ];
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  const cardStyle: React.CSSProperties = {
+    background: "var(--color-bg)",
+    border: "1px solid var(--color-border)",
+    borderRadius: 8,
+    padding: "24px",
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* ------------------------------------------------------------------ */}
+    <div style={{ minHeight: "100vh", background: "var(--color-bg-subtle)" }}>
       {/* Top bar */}
-      {/* ------------------------------------------------------------------ */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          {/* Back link */}
+      <header
+        style={{
+          background: "var(--color-bg)",
+          borderBottom: "1px solid var(--color-border)",
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: "0 auto",
+            padding: "0 24px",
+            height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-500 transition-colors font-medium"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--color-text-secondary)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+            }}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ArrowLeft size={14} strokeWidth={2} />
             Back to tools
           </button>
 
-          {/* Logo */}
-          <span className="font-extrabold text-red-500 tracking-tight text-lg select-none">
-            PDFcheck
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ width: 22, height: 22, borderRadius: 4, background: "var(--color-accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path d="M1 1h4v4H1zM7 1h4v4H7zM1 7h4v4H1zM7 7h4v4H7z" fill="white" />
+              </svg>
+            </div>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)" }}>PDFcheck</span>
+          </div>
 
-          {/* User email */}
-          <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[200px]">
-            {user.email}
-          </span>
+          <span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{user.email}</span>
         </div>
       </header>
 
-      {/* ------------------------------------------------------------------ */}
       {/* Mobile tab bar */}
-      {/* ------------------------------------------------------------------ */}
-      <nav className="lg:hidden bg-white border-b border-gray-100 sticky top-14 z-30 overflow-x-auto">
-        <div className="flex min-w-max px-4">
-          {navItems.map(({ id, label }) => (
+      <nav
+        className="lg:hidden"
+        style={{
+          background: "var(--color-bg)",
+          borderBottom: "1px solid var(--color-border)",
+          position: "sticky",
+          top: 60,
+          zIndex: 30,
+          overflowX: "auto",
+        }}
+      >
+        <div style={{ display: "flex", minWidth: "max-content", padding: "0 16px" }}>
+          {NAV_ITEMS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => scrollTo(id)}
-              className={`px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                activeSection === id
-                  ? "border-red-500 text-red-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              style={{
+                padding: "0 16px",
+                height: 44,
+                fontSize: 13,
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                background: "none",
+                border: "none",
+                borderBottom: `2px solid ${activeSection === id ? "var(--color-accent)" : "transparent"}`,
+                color: activeSection === id ? "var(--color-accent)" : "var(--color-text-secondary)",
+                cursor: "pointer",
+                transition: "all 0.1s ease",
+              }}
             >
               {label}
             </button>
@@ -507,181 +458,197 @@ export function Dashboard() {
         </div>
       </nav>
 
-      {/* ------------------------------------------------------------------ */}
       {/* Main layout */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex gap-8">
+      <div
+        style={{
+          maxWidth: 1200,
+          margin: "0 auto",
+          padding: "32px 24px",
+          display: "flex",
+          gap: 32,
+          alignItems: "flex-start",
+        }}
+      >
         {/* Desktop sidebar */}
-        <aside className="hidden lg:block w-52 flex-shrink-0">
-          <nav className="sticky top-24 bg-white rounded-2xl border border-gray-100 shadow-sm p-3 space-y-1">
-            {navItems.map(({ id, label }) => (
+        <aside
+          className="hidden lg:block"
+          style={{ width: 240, flexShrink: 0 }}
+        >
+          <div
+            style={{
+              position: "sticky",
+              top: 92,
+              background: "var(--color-bg)",
+              border: "1px solid var(--color-border)",
+              borderRadius: 8,
+              padding: 8,
+            }}
+          >
+            {/* User info */}
+            <div style={{ padding: "12px 12px 16px", borderBottom: "1px solid var(--color-border)", marginBottom: 8 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 2 }}>{displayName}</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
+              <span
+                style={{
+                  display: "inline-block",
+                  marginTop: 6,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "2px 8px",
+                  borderRadius: 4,
+                  background: currentPlan === "free" ? "var(--color-bg-subtle)" : "var(--color-accent-subtle)",
+                  color: currentPlan === "free" ? "var(--color-text-secondary)" : "var(--color-accent)",
+                  border: `1px solid ${currentPlan === "free" ? "var(--color-border)" : "var(--color-accent)"}`,
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {planLabel(currentPlan)}
+              </span>
+            </div>
+
+            {NAV_ITEMS.map(({ id, label, Icon }) => (
               <button
                 key={id}
                 onClick={() => scrollTo(id)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  activeSection === id
-                    ? "bg-red-50 text-red-500"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                }`}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  padding: "9px 12px",
+                  borderRadius: 6,
+                  border: "none",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontSize: 13,
+                  fontWeight: activeSection === id ? 600 : 450,
+                  background: activeSection === id ? "var(--color-accent-subtle)" : "transparent",
+                  color: activeSection === id ? "var(--color-accent)" : "var(--color-text-secondary)",
+                  transition: "all 0.1s ease",
+                }}
+                className={activeSection !== id ? "hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)]" : ""}
               >
+                <Icon size={14} strokeWidth={1.75} />
                 {label}
               </button>
             ))}
-          </nav>
+
+            <div style={{ borderTop: "1px solid var(--color-border)", marginTop: 8, paddingTop: 8 }}>
+              <button
+                onClick={() => navigate("/dashboard/api")}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "9px 12px",
+                  borderRadius: 6,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  background: "transparent",
+                  color: "var(--color-text-secondary)",
+                }}
+                className="hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-text-primary)]"
+              >
+                <span>API Keys</span>
+                <ChevronRight size={12} strokeWidth={2} />
+              </button>
+            </div>
+          </div>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 min-w-0 space-y-10">
-          {/* ---------------------------------------------------------------- */}
-          {/* OVERVIEW SECTION */}
-          {/* ---------------------------------------------------------------- */}
+        <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 32 }}>
+
+          {/* OVERVIEW */}
           <section ref={sectionRefs.overview} id="overview">
-            {/* Welcome header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              <div>
-                {loading ? (
-                  <>
-                    <Skeleton className="h-8 w-56 mb-2" />
-                    <Skeleton className="h-4 w-40" />
-                  </>
-                ) : (
-                  <>
-                    <h1 className="text-2xl font-extrabold text-gray-800">
-                      Welcome back, {displayName}!
-                    </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${planColor(currentPlan)}`}
-                      >
-                        {planLabel(currentPlan)}
-                      </span>
-                      {daysLeft !== null && (
-                        <span className="text-xs text-gray-400">
-                          {daysLeft === 0
-                            ? "Expires today"
-                            : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+            <div style={{ marginBottom: 24 }}>
+              {loading ? (
+                <>
+                  <Skeleton style={{ height: 26, width: 220, marginBottom: 8 }} />
+                  <Skeleton style={{ height: 14, width: 140 }} />
+                </>
+              ) : (
+                <>
+                  <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--color-text-primary)", marginBottom: 4 }}>
+                    Good morning, {displayName}
+                  </h1>
+                  <p style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+                    {daysLeft !== null
+                      ? `${planLabel(currentPlan)} plan · ${daysLeft === 0 ? "Expires today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}`
+                      : `${planLabel(currentPlan)} plan`}
+                  </p>
+                </>
+              )}
             </div>
 
-            {/* Stats cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <StatCard
-                loading={loading}
-                label="Tools today"
-                value={loading ? "—" : `${jobsToday} / ${dailyLimitLabel}`}
-                sub="completed jobs"
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Max file size"
-                value={loading ? "—" : `${maxFileMb} MB`}
-                sub="per file upload"
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Current plan"
-                value={loading ? "—" : planLabel(currentPlan)}
-                sub={currentPlan === "free" ? "Free tier" : "Paid subscription"}
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Member since"
-                value={loading ? "—" : memberSince}
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                }
-              />
+            {/* Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+              <StatCard loading={loading} label="Tools today" value={loading ? "—" : `${jobsToday} / ${dailyLimitLabel}`} sub="completed jobs" icon={<BarChart2 size={16} strokeWidth={1.75} />} />
+              <StatCard loading={loading} label="Max file size" value={loading ? "—" : `${maxFileMb} MB`} sub="per upload" icon={<FileText size={16} strokeWidth={1.75} />} />
+              <StatCard loading={loading} label="Plan" value={loading ? "—" : planLabel(currentPlan)} sub={currentPlan === "free" ? "Free tier" : "Paid"} icon={<CreditCard size={16} strokeWidth={1.75} />} />
+              <StatCard loading={loading} label="Member since" value={loading ? "—" : memberSince} icon={<Settings size={16} strokeWidth={1.75} />} />
             </div>
 
             {/* Usage chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
-                Tools used — last 30 days
-              </h2>
+            <div style={cardStyle}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: 20 }}>
+                Usage — last 30 days
+              </p>
               {loading ? (
-                <Skeleton className="h-48 w-full" />
+                <Skeleton style={{ height: 180, width: "100%" }} />
               ) : (
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="usageGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.12} />
+                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={4}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} tickLine={false} axisLine={false} interval={4} />
+                    <YAxis tick={{ fontSize: 10, fill: "var(--color-text-muted)" }} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip
-                      contentStyle={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-                      }}
-                      itemStyle={{ color: "#ef4444" }}
-                      labelStyle={{ color: "#6b7280", fontWeight: 600 }}
+                      contentStyle={{ border: "1px solid var(--color-border)", borderRadius: 6, fontSize: 12, boxShadow: "var(--shadow-md)" }}
+                      itemStyle={{ color: "#2563eb" }}
+                      labelStyle={{ color: "var(--color-text-secondary)", fontWeight: 600 }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="jobs"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      fill="url(#usageGrad)"
-                      dot={false}
-                      activeDot={{ r: 4, fill: "#ef4444" }}
-                    />
+                    <Area type="monotone" dataKey="jobs" stroke="#2563eb" strokeWidth={1.5} fill="url(#usageGrad)" dot={false} activeDot={{ r: 3, fill: "#2563eb" }} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
             </div>
 
             {/* Quick actions */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
+            <div style={{ ...cardStyle, marginTop: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: 16 }}>
                 Quick actions
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {QUICK_ACTIONS.map(({ id, label, icon }) => (
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 8 }}>
+                {QUICK_ACTIONS.map(({ id, label, Icon }) => (
                   <button
                     key={id}
                     onClick={() => openTool(id)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-700 text-sm font-semibold transition-colors"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      padding: "10px 14px",
+                      borderRadius: 6,
+                      border: "1px solid var(--color-border)",
+                      background: "transparent",
+                      color: "var(--color-text-secondary)",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.1s ease",
+                      textAlign: "left",
+                    }}
+                    className="hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] hover:bg-[var(--color-accent-subtle)]"
                   >
-                    <span className="text-base leading-none select-none">{icon}</span>
+                    <Icon size={14} strokeWidth={1.75} />
                     {label}
                   </button>
                 ))}
@@ -689,93 +656,75 @@ export function Dashboard() {
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* RECENT FILES SECTION */}
-          {/* ---------------------------------------------------------------- */}
+          {/* RECENT FILES */}
           <section ref={sectionRefs.files} id="files">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
+            <div style={cardStyle}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: 20 }}>
                 Recent files
-              </h2>
+              </p>
 
               {loading ? (
-                <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full" />
-                  ))}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[...Array(4)].map((_, i) => <Skeleton key={i} style={{ height: 52 }} />)}
                 </div>
               ) : recentJobs.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <svg
-                    className="w-10 h-10 mx-auto mb-3 opacity-30"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p className="text-sm font-medium">No files yet</p>
-                  <p className="text-xs mt-1">Use a tool to process your first PDF.</p>
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--color-text-muted)" }}>
+                  <Clock size={32} strokeWidth={1.25} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
+                  <p style={{ fontSize: 14, color: "var(--color-text-secondary)", marginBottom: 4 }}>No files yet</p>
+                  <p style={{ fontSize: 13 }}>Use a tool to process your first PDF.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50">
-                  {recentJobs.map((job) => {
-                    const blobUrl =
-                      job.metadata && typeof job.metadata === "object"
-                        ? (job.metadata as Record<string, unknown>).blobUrl as string | undefined
-                        : undefined;
+                <div>
+                  {recentJobs.map((job, i) => {
+                    const blobUrl = job.metadata && typeof job.metadata === "object"
+                      ? (job.metadata as Record<string, unknown>).blobUrl as string | undefined
+                      : undefined;
 
                     return (
                       <div
                         key={job.id}
-                        className="flex items-center justify-between py-3.5 gap-4"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 16,
+                          padding: "14px 0",
+                          borderBottom: i < recentJobs.length - 1 ? "1px solid var(--color-border)" : "none",
+                        }}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* Tool icon */}
-                          <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="w-4 h-4 text-red-400"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                          <div style={{ width: 34, height: 34, borderRadius: 6, background: "var(--color-accent-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <FileText size={15} strokeWidth={1.75} style={{ color: "var(--color-accent)" }} />
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-700 truncate">
-                              {toolLabel(job.tool)}
-                            </p>
-                            <p className="text-xs text-gray-400">{relativeTime(job.created_at)}</p>
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 2 }}>{toolLabel(job.tool)}</p>
+                            <p style={{ fontSize: 12, color: "var(--color-text-muted)" }}>{relativeTime(job.created_at)}</p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          {/* Status badge */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                           <span
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                              job.status === "done"
-                                ? "bg-green-50 text-green-600 border-green-200"
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: "3px 8px",
+                              borderRadius: 4,
+                              border: "1px solid",
+                              ...(job.status === "done"
+                                ? { background: "#f0fdf4", color: "#059669", borderColor: "#bbf7d0" }
                                 : job.status === "error"
-                                ? "bg-red-50 text-red-500 border-red-200"
-                                : "bg-amber-50 text-amber-600 border-amber-200"
-                            }`}
+                                ? { background: "#fef2f2", color: "#dc2626", borderColor: "#fecaca" }
+                                : { background: "#fffbeb", color: "#d97706", borderColor: "#fde68a" }),
+                            }}
                           >
-                            {job.status === "done"
-                              ? "Done"
-                              : job.status === "error"
-                              ? "Error"
-                              : "Processing"}
+                            {job.status === "done" ? "Done" : job.status === "error" ? "Error" : "Processing"}
                           </span>
 
-                          {/* Re-download button */}
                           {job.status === "done" && blobUrl && (
                             <a
                               href={blobUrl}
                               download
-                              className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                              style={{ fontSize: 12, fontWeight: 500, color: "var(--color-accent)", textDecoration: "none" }}
                             >
                               Download
                             </a>
@@ -789,202 +738,167 @@ export function Dashboard() {
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* BILLING SECTION */}
-          {/* ---------------------------------------------------------------- */}
+          {/* BILLING */}
           <section ref={sectionRefs.billing} id="billing">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
+            <div style={cardStyle}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)", marginBottom: 20 }}>
                 Billing
-              </h2>
+              </p>
 
               {loading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton className="h-4 w-56" />
-                  <Skeleton className="h-4 w-44" />
-                  <div className="flex gap-3 pt-3">
-                    <Skeleton className="h-10 w-36" />
-                    <Skeleton className="h-10 w-28" />
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <Skeleton style={{ height: 20, width: 160 }} />
+                  <Skeleton style={{ height: 14, width: 220 }} />
+                  <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                    <Skeleton style={{ height: 36, width: 140 }} />
+                    <Skeleton style={{ height: 36, width: 100 }} />
                   </div>
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
                     <span
-                      className={`text-sm font-bold px-3 py-1 rounded-full border ${planColor(currentPlan)}`}
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        padding: "4px 10px",
+                        borderRadius: 4,
+                        border: "1px solid",
+                        background: currentPlan === "free" ? "var(--color-bg-subtle)" : "var(--color-accent-subtle)",
+                        color: currentPlan === "free" ? "var(--color-text-secondary)" : "var(--color-accent)",
+                        borderColor: currentPlan === "free" ? "var(--color-border)" : "var(--color-accent)",
+                      }}
                     >
                       {planLabel(currentPlan)} Plan
                     </span>
-                    {profile?.stripe_subscription_id ? (
-                      <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400 font-semibold bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200">
-                        Free tier
-                      </span>
-                    )}
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        padding: "3px 8px",
+                        borderRadius: 4,
+                        border: "1px solid",
+                        ...(profile?.stripe_subscription_id
+                          ? { background: "#f0fdf4", color: "#059669", borderColor: "#bbf7d0" }
+                          : { background: "var(--color-bg-subtle)", color: "var(--color-text-muted)", borderColor: "var(--color-border)" }),
+                      }}
+                    >
+                      {profile?.stripe_subscription_id ? "Active" : "Free tier"}
+                    </span>
                   </div>
 
                   {(profile as any)?.current_period_end && (
-                    <p className="text-sm text-gray-500 mb-1">
-                      <span className="font-semibold text-gray-700">Next billing date:</span>{" "}
-                      {formatDate((profile as any).current_period_end)}
+                    <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+                      Next billing: <strong style={{ color: "var(--color-text-primary)" }}>{formatDate((profile as any).current_period_end)}</strong>
                     </p>
                   )}
 
                   {daysLeft !== null && (
-                    <p className="text-sm text-gray-500 mb-5">
-                      <span className="font-semibold text-gray-700">Days remaining:</span>{" "}
-                      {daysLeft === 0 ? "Expires today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}
+                    <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 16 }}>
+                      Days remaining: <strong style={{ color: "var(--color-text-primary)" }}>{daysLeft === 0 ? "Expires today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}</strong>
                     </p>
                   )}
 
                   {!daysLeft && currentPlan === "free" && (
-                    <p className="text-sm text-gray-400 mb-5">
+                    <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 16 }}>
                       You are on the free plan. Upgrade to unlock more features.
                     </p>
                   )}
 
-                  <div className="flex flex-wrap gap-3 mt-4">
+                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                     {profile?.stripe_subscription_id && (
                       <button
-                        onClick={() =>
-                          window.dispatchEvent(new CustomEvent("open-billing"))
-                        }
-                        className="px-5 py-2.5 rounded-xl bg-gray-800 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-billing"))}
+                        style={{ height: 36, padding: "0 16px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-primary)", cursor: "pointer" }}
                       >
-                        Manage Billing
+                        Manage billing
                       </button>
                     )}
-                    <a
-                      href="/#pricing"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate("/");
-                        setTimeout(
-                          () =>
-                            document
-                              .getElementById("pricing")
-                              ?.scrollIntoView({ behavior: "smooth" }),
-                          150
-                        );
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
+                    <button
+                      onClick={() => { navigate("/"); setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 150); }}
+                      style={{ height: 36, padding: "0 16px", fontSize: 13, fontWeight: 600, borderRadius: 6, border: "none", background: "var(--color-accent)", color: "#fff", cursor: "pointer" }}
                     >
-                      Upgrade Plan
-                    </a>
+                      Upgrade plan
+                    </button>
                   </div>
                 </div>
               )}
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* SETTINGS SECTION */}
-          {/* ---------------------------------------------------------------- */}
-          <section ref={sectionRefs.settings} id="settings" className="pb-16">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-8">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+          {/* SETTINGS */}
+          <section ref={sectionRefs.settings} id="settings" style={{ paddingBottom: 64 }}>
+            <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 28 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--color-text-muted)" }}>
                 Account settings
-              </h2>
+              </p>
 
               {/* Change email */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-3">Change email</h3>
-                <div className="flex gap-3 flex-wrap">
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12 }}>Change email</h3>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <input
                     type="email"
                     placeholder={user.email ?? "New email address"}
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
+                    style={{ ...inputStyle, flex: 1, minWidth: 200 }}
                   />
                   <button
                     onClick={handleChangeEmail}
                     disabled={emailSaving || !newEmail.trim()}
-                    className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ height: 38, padding: "0 16px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "none", background: "var(--color-accent)", color: "#fff", cursor: "pointer", opacity: (emailSaving || !newEmail.trim()) ? 0.6 : 1 }}
                   >
                     {emailSaving ? "Saving…" : "Save"}
                   </button>
                 </div>
                 {emailMsg && (
-                  <p
-                    className={`text-xs mt-2 font-medium ${
-                      emailMsg.ok ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
-                    {emailMsg.text}
-                  </p>
+                  <p style={{ fontSize: 12, marginTop: 8, color: emailMsg.ok ? "#059669" : "#dc2626" }}>{emailMsg.text}</p>
                 )}
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+              <div style={{ borderTop: "1px solid var(--color-border)" }} />
 
               {/* Change password */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-3">Change password</h3>
-                <div className="space-y-3 max-w-sm">
-                  <input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
-                  />
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 12 }}>Change password</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360 }}>
+                  <input type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} />
+                  <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} />
                   <button
                     onClick={handleChangePassword}
                     disabled={pwSaving || !newPassword}
-                    className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    style={{ height: 38, padding: "0 16px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "none", background: "var(--color-accent)", color: "#fff", cursor: "pointer", opacity: (pwSaving || !newPassword) ? 0.6 : 1, alignSelf: "flex-start" }}
                   >
                     {pwSaving ? "Saving…" : "Update password"}
                   </button>
                 </div>
                 {pwMsg && (
-                  <p
-                    className={`text-xs mt-2 font-medium ${
-                      pwMsg.ok ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
-                    {pwMsg.text}
-                  </p>
+                  <p style={{ fontSize: 12, marginTop: 8, color: pwMsg.ok ? "#059669" : "#dc2626" }}>{pwMsg.text}</p>
                 )}
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+              <div style={{ borderTop: "1px solid var(--color-border)" }} />
 
               {/* Delete account */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-1">Delete account</h3>
-                <p className="text-xs text-gray-400 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be
-                  undone.
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", marginBottom: 4 }}>Delete account</h3>
+                <p style={{ fontSize: 13, color: "var(--color-text-muted)", marginBottom: 16 }}>
+                  Permanently delete your account and all data. This cannot be undone.
                 </p>
                 {deleteConfirm ? (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-sm text-red-500 font-semibold">
-                      Are you absolutely sure?
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 13, color: "#dc2626", fontWeight: 500 }}>Are you sure?</span>
                     <button
                       onClick={handleDeleteAccount}
                       disabled={deleting}
-                      className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+                      style={{ height: 36, padding: "0 14px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "none", background: "#dc2626", color: "#fff", cursor: "pointer" }}
                     >
                       {deleting ? "Deleting…" : "Yes, delete my account"}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(false)}
-                      className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                      style={{ height: 36, padding: "0 14px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-secondary)", cursor: "pointer" }}
                     >
                       Cancel
                     </button>
@@ -992,7 +906,7 @@ export function Dashboard() {
                 ) : (
                   <button
                     onClick={() => setDeleteConfirm(true)}
-                    className="px-5 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
+                    style={{ height: 36, padding: "0 14px", fontSize: 13, fontWeight: 500, borderRadius: 6, border: "1px solid #fecaca", background: "transparent", color: "#dc2626", cursor: "pointer" }}
                   >
                     Delete account
                   </button>
