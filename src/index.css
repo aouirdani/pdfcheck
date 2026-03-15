@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   html {
@@ -30,16 +29,9 @@ html.dark {
   --text-muted: #9CA3AF;
 }
 
-/* Smooth transitions for dark mode */
-*, *::before, *::after {
-  transition-property: background-color, border-color;
-  transition-duration: 150ms;
-  transition-timing-function: ease;
-}
-
-/* Override transition for animated elements */
-button, a, svg, [class*="animate"], [class*="transition"] {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+/* Targeted transitions — avoid global * selector for performance */
+button, a {
+  transition-property: color, background-color, border-color, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
