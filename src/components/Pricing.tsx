@@ -21,26 +21,27 @@ export function Pricing() {
     setLoading(true);
     setError("");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            priceId,
-            successUrl: `${window.location.origin}?checkout=success`,
-            cancelUrl: `${window.location.origin}?checkout=cancelled`,
-          }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Checkout failed");
-      if (data.url) window.location.href = data.url;
+      // Refresh session first to ensure we have a valid access token
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        window.dispatchEvent(new CustomEvent("open-auth"));
+        return;
+      }
+
+      const { data, error } = await (supabase as any).functions.invoke("create-checkout", {
+        body: {
+          priceId,
+          successUrl: `${window.location.origin}?checkout=success`,
+          cancelUrl: `${window.location.origin}?checkout=cancelled`,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw new Error(error.message ?? "Checkout failed");
+      if (data?.url) window.location.href = data.url;
+      else throw new Error(data?.error ?? "No checkout URL returned");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
     } finally {
