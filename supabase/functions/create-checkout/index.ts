@@ -48,7 +48,8 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid request body" }, 400);
   }
 
-  const { priceId, successUrl, cancelUrl } = body;
+  const priceId = body.priceId?.trim();
+  const { successUrl, cancelUrl } = body;
   if (!priceId) return json({ error: "priceId is required" }, 400);
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
