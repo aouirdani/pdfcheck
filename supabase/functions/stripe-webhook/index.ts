@@ -61,14 +61,14 @@ Deno.serve(async (req) => {
         const periodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
         await admin.from("profiles").update({
-          plan: "pro",
+          plan: "premium",
           stripe_customer_id: customerId,
           stripe_subscription_id: subscriptionId,
           subscription_status: subscription.status,
           current_period_end: periodEnd,
         }).eq("id", userId);
 
-        console.log(`User ${userId} upgraded to pro`);
+        console.log(`User ${userId} upgraded to premium`);
         break;
       }
 
@@ -76,7 +76,8 @@ Deno.serve(async (req) => {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
         const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
-        const plan = sub.status === "active" ? "pro" : "free";
+        // DB check constraint only allows 'free', 'premium', 'team'
+        const plan = sub.status === "active" ? "premium" : "free";
 
         const { data: profile } = await admin
           .from("profiles")

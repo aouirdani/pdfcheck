@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { listJobs, type Job } from "../lib/jobs";
-import { triggerDownload } from "../lib/tool-processor";
+import { type Job } from "../lib/jobs";
 import { supabase } from "../lib/supabase";
 
 interface Props {
@@ -57,8 +56,6 @@ export function HistoryDrawer({ isOpen, onClose }: Props) {
   const fetchJobs = useCallback(async (startOffset = 0, replace = true) => {
     setLoading(true);
     try {
-      const fetched = await listJobs(PAGE_SIZE + 1); // fetch one extra to detect more pages
-      // listJobs doesn't support offset natively, so we use raw query
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -69,21 +66,20 @@ export function HistoryDrawer({ isOpen, onClose }: Props) {
         return;
       }
 
+      // Fetch PAGE_SIZE + 1 rows to detect whether more pages exist.
+      // .range() is inclusive: range(0, PAGE_SIZE) returns PAGE_SIZE+1 rows.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
         .from("jobs")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .range(startOffset, startOffset + PAGE_SIZE); // inclusive range
+        .range(startOffset, startOffset + PAGE_SIZE); // inclusive: returns up to PAGE_SIZE+1 rows
 
       const rows: Job[] = data ?? [];
-      // If we got PAGE_SIZE results, there may be more
-      const moreExists = rows.length === PAGE_SIZE + 1;
+      // If we got PAGE_SIZE+1 rows, there are more beyond this page
+      const moreExists = rows.length > PAGE_SIZE;
       const display = moreExists ? rows.slice(0, PAGE_SIZE) : rows;
-
-      // Suppress the unused variable (fetched was just a type-check)
-      void fetched;
 
       setJobs((prev) => replace ? display : [...prev, ...display]);
       setHasMore(moreExists);
@@ -107,20 +103,21 @@ export function HistoryDrawer({ isOpen, onClose }: Props) {
     fetchJobs(offset, false);
   };
 
-  const handleRedownload = async (job: Job) => {
+  const handleRedownload = (job: Job) => {
     if (!job.output_path) return;
-    // output_path stores the filename; fetch from Supabase storage if available,
-    // otherwise try as a data URL / blob URL stored in metadata
+    // Processed files are generated client-side and not persisted to storage.
+    // Re-download is only possible within the same browser session via an object URL
+    // stored in metadata.blobUrl at processing time.
     const blobUrl = job.metadata?.blobUrl as string | undefined;
     if (blobUrl) {
       const a = document.createElement("a");
       a.href = blobUrl;
       a.download = job.output_path;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       return;
     }
-    // Fallback: trigger a dummy download to signal unavailability
-    void triggerDownload;
     alert("Re-download is only available for files processed in this browser session.");
   };
 

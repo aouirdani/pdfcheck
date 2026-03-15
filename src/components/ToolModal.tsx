@@ -171,12 +171,22 @@ export function ToolModal({ tool, onClose }: Props) {
 
       toast("File processed successfully!", "success");
 
+      // Build an object URL for same-session re-download support
+      let blobUrl: string | undefined;
+      if (res.blob) {
+        blobUrl = URL.createObjectURL(res.blob);
+      } else if (res.blobs && res.blobs.length > 0) {
+        // For multi-file results store the first blob URL only
+        blobUrl = URL.createObjectURL(res.blobs[0]);
+      }
+
       // Mark job as done
       if (jobId) {
         await updateJob(jobId, {
           status: "done",
           progress: 100,
           output_path: res.filename,
+          metadata: { fileCount: files.length, blobUrl },
         }).catch(() => {});
       }
 

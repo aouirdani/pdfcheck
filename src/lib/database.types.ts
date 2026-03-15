@@ -45,6 +45,10 @@ export interface Profile {
   avatar_url: string | null;
   plan: "free" | "premium" | "team";
   jobs_this_month: number;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  subscription_status: string | null;
+  current_period_end: string | null;
   created_at: string;
 }
 
@@ -58,7 +62,7 @@ export interface Database {
       };
       profiles: {
         Row: Profile;
-        Insert: Omit<Profile, "created_at">;
+        Insert: Omit<Profile, "created_at" | "stripe_customer_id" | "stripe_subscription_id" | "subscription_status" | "current_period_end">;
         Update: Partial<Omit<Profile, "id" | "created_at">>;
       };
     };

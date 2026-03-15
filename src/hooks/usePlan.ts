@@ -63,7 +63,8 @@ export function usePlan(): UsePlanResult {
 
       const plan: string = profile?.plan ?? "free";
       const jobsThisMonth: number = profile?.jobs_this_month ?? 0;
-      const isPro = plan === "pro" || plan === "premium" || plan === "team";
+      // DB plan check constraint only allows: 'free', 'premium', 'team'
+      const isPro = plan === "premium" || plan === "team";
 
       // Count today's completed jobs
       const todayStart = new Date();
