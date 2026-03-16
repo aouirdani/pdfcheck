@@ -13,10 +13,6 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { usePlan, PLAN_LIMITS, type PlanKey } from "../hooks/usePlan";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface Profile {
   id: string;
   email: string;
@@ -42,10 +38,6 @@ interface ChartPoint {
 
 type ActiveSection = "overview" | "files" | "billing" | "settings";
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -59,9 +51,7 @@ function relativeTime(iso: string): string {
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+    year: "numeric", month: "short", day: "numeric",
   });
 }
 
@@ -71,120 +61,61 @@ function daysUntil(iso: string | null | undefined): number | null {
   return Math.max(0, Math.ceil(diff / 86400000));
 }
 
-function planColor(plan: string): string {
-  switch (plan) {
-    case "premium":
-      return "bg-purple-100 text-purple-700 border-purple-200";
-    case "team":
-      return "bg-blue-100 text-blue-700 border-blue-200";
-    case "starter":
-      return "bg-amber-100 text-amber-700 border-amber-200";
-    default:
-      return "bg-gray-100 text-gray-600 border-gray-200";
-  }
-}
-
 function planLabel(plan: string): string {
   return PLAN_LIMITS[plan as PlanKey]?.label ?? "Free";
 }
 
 function toolLabel(tool: string): string {
   const map: Record<string, string> = {
-    merge: "Merge PDF",
-    split: "Split PDF",
-    compress: "Compress PDF",
-    rotate: "Rotate PDF",
-    reorder: "Reorder Pages",
-    "add-pages": "Add Pages",
-    "jpg-to-pdf": "JPG to PDF",
-    "word-to-pdf": "Word to PDF",
-    "powerpoint-to-pdf": "PPT to PDF",
-    "excel-to-pdf": "Excel to PDF",
-    "html-to-pdf": "HTML to PDF",
-    "pdf-to-jpg": "PDF to JPG",
-    "pdf-to-word": "PDF to Word",
-    "pdf-to-ppt": "PDF to PPT",
-    "pdf-to-excel": "PDF to Excel",
-    "edit-pdf": "Edit PDF",
-    watermark: "Watermark",
-    sign: "Sign PDF",
-    annotate: "Annotate PDF",
-    protect: "Protect PDF",
-    unlock: "Unlock PDF",
-    ocr: "OCR",
+    merge: "Merge PDF", split: "Split PDF", compress: "Compress PDF",
+    rotate: "Rotate PDF", reorder: "Reorder Pages", "add-pages": "Add Pages",
+    "jpg-to-pdf": "JPG to PDF", "word-to-pdf": "Word to PDF",
+    "powerpoint-to-pdf": "PPT to PDF", "excel-to-pdf": "Excel to PDF",
+    "html-to-pdf": "HTML to PDF", "pdf-to-jpg": "PDF to JPG",
+    "pdf-to-word": "PDF to Word", "pdf-to-ppt": "PDF to PPT",
+    "pdf-to-excel": "PDF to Excel", "edit-pdf": "Edit PDF",
+    watermark: "Watermark", sign: "Sign PDF", annotate: "Annotate PDF",
+    protect: "Protect PDF", unlock: "Unlock PDF", ocr: "OCR",
     "page-numbers": "Page Numbers",
   };
   return map[tool] ?? tool;
 }
 
-// ---------------------------------------------------------------------------
-// Skeleton loader
-// ---------------------------------------------------------------------------
-
-function Skeleton({ className }: { className?: string }) {
-  return (
-    <div
-      className={`animate-pulse bg-gray-200 rounded-lg ${className ?? ""}`}
-    />
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Stat Card
-// ---------------------------------------------------------------------------
-
-function StatCard({
-  label,
-  value,
-  sub,
-  icon,
-  loading,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  icon: React.ReactNode;
-  loading: boolean;
+function StatCard({ label, value, sub, loading }: {
+  label: string; value: string; sub?: string; loading: boolean;
 }) {
-  if (loading) {
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <Skeleton className="h-4 w-24 mb-3" />
-        <Skeleton className="h-7 w-32 mb-2" />
-        <Skeleton className="h-3 w-20" />
-      </div>
-    );
-  }
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-          {label}
-        </span>
-        <span className="text-gray-300">{icon}</span>
-      </div>
-      <div className="text-2xl font-bold text-gray-800">{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+    <div style={{
+      padding: 20, border: "var(--border)", borderRadius: "var(--radius)",
+      background: "var(--white)",
+    }}>
+      {loading ? (
+        <>
+          <div style={{ height: 12, width: 80, background: "var(--gray-100)", borderRadius: 4, marginBottom: 12 }} />
+          <div style={{ height: 28, width: 100, background: "var(--gray-100)", borderRadius: 4, marginBottom: 8 }} />
+          <div style={{ height: 12, width: 60, background: "var(--gray-100)", borderRadius: 4 }} />
+        </>
+      ) : (
+        <>
+          <p style={{ fontSize: 11, fontWeight: 600, color: "var(--gray-400)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 8 }}>
+            {label}
+          </p>
+          <p style={{ fontSize: 28, fontWeight: 700, color: "var(--black)", marginBottom: 4 }}>{value}</p>
+          {sub && <p style={{ fontSize: 13, color: "var(--gray-400)" }}>{sub}</p>}
+        </>
+      )}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Quick actions config
-// ---------------------------------------------------------------------------
-
 const QUICK_ACTIONS = [
-  { id: "merge", label: "Merge PDF", icon: "⊕" },
-  { id: "compress", label: "Compress PDF", icon: "⊖" },
-  { id: "pdf-to-word", label: "PDF to Word", icon: "W" },
-  { id: "split", label: "Split PDF", icon: "✂" },
-  { id: "ocr", label: "OCR", icon: "T" },
-  { id: "watermark", label: "Watermark", icon: "≋" },
+  { id: "merge", label: "Merge PDF" },
+  { id: "compress", label: "Compress" },
+  { id: "pdf-to-word", label: "PDF to Word" },
+  { id: "split", label: "Split PDF" },
+  { id: "ocr", label: "OCR" },
+  { id: "watermark", label: "Watermark" },
 ];
-
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
 
 export function Dashboard() {
   const navigate = useNavigate();
@@ -196,7 +127,6 @@ export function Dashboard() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // Settings forms
   const [newEmail, setNewEmail] = useState("");
   const [emailSaving, setEmailSaving] = useState(false);
   const [emailMsg, setEmailMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -209,7 +139,6 @@ export function Dashboard() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Sidebar/tab navigation
   const [activeSection, setActiveSection] = useState<ActiveSection>("overview");
   const sectionRefs = {
     overview: useRef<HTMLDivElement>(null),
@@ -218,10 +147,6 @@ export function Dashboard() {
     settings: useRef<HTMLDivElement>(null),
   };
 
-  // ---------------------------------------------------------------------------
-  // Redirect if unauthenticated
-  // ---------------------------------------------------------------------------
-
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/", { replace: true });
@@ -229,55 +154,32 @@ export function Dashboard() {
     }
   }, [authLoading, user, navigate]);
 
-  // ---------------------------------------------------------------------------
-  // Data fetching
-  // ---------------------------------------------------------------------------
-
   useEffect(() => {
     if (!user) return;
-
     async function fetchData() {
       setDataLoading(true);
-
       try {
-        // Profile
         const { data: profileData } = await (supabase as any)
-          .from("profiles")
-          .select("*")
-          .eq("id", user!.id)
-          .single();
-
+          .from("profiles").select("*").eq("id", user!.id).single();
         if (profileData) setProfile(profileData as Profile);
 
-        // Recent jobs
         const { data: jobsData } = await (supabase as any)
-          .from("jobs")
-          .select("*")
-          .eq("user_id", user!.id)
-          .order("created_at", { ascending: false })
-          .limit(5);
-
+          .from("jobs").select("*").eq("user_id", user!.id)
+          .order("created_at", { ascending: false }).limit(5);
         if (jobsData) setRecentJobs(jobsData as Job[]);
 
-        // Usage chart — last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
         const { data: usageData } = await (supabase as any)
-          .from("jobs")
-          .select("created_at")
-          .eq("user_id", user!.id)
+          .from("jobs").select("created_at").eq("user_id", user!.id)
           .gte("created_at", thirtyDaysAgo.toISOString());
 
         if (usageData) {
-          // Build a map of date -> count
           const counts: Record<string, number> = {};
           (usageData as { created_at: string }[]).forEach(({ created_at }) => {
             const day = created_at.slice(0, 10);
             counts[day] = (counts[day] ?? 0) + 1;
           });
-
-          // Fill all 30 days
           const points: ChartPoint[] = [];
           for (let i = 29; i >= 0; i--) {
             const d = new Date();
@@ -290,42 +192,27 @@ export function Dashboard() {
           }
           setChartData(points);
         }
-      } catch {
-        // silently fail — data will just be empty
-      } finally {
+      } catch { /* silently fail */ } finally {
         setDataLoading(false);
       }
     }
-
     fetchData();
   }, [user]);
 
-  // ---------------------------------------------------------------------------
-  // Intersection observer for active section tracking
-  // ---------------------------------------------------------------------------
-
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
-    (Object.entries(sectionRefs) as [ActiveSection, React.RefObject<HTMLDivElement>][]).forEach(
-      ([key, ref]) => {
-        if (!ref.current) return;
-        const obs = new IntersectionObserver(
-          ([entry]) => {
-            if (entry.isIntersecting) setActiveSection(key);
-          },
-          { rootMargin: "-40% 0px -50% 0px" }
-        );
-        obs.observe(ref.current);
-        observers.push(obs);
-      }
-    );
+    (Object.entries(sectionRefs) as [ActiveSection, React.RefObject<HTMLDivElement>][]).forEach(([key, ref]) => {
+      if (!ref.current) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(key); },
+        { rootMargin: "-40% 0px -50% 0px" }
+      );
+      obs.observe(ref.current);
+      observers.push(obs);
+    });
     return () => observers.forEach((o) => o.disconnect());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // ---------------------------------------------------------------------------
-  // Actions
-  // ---------------------------------------------------------------------------
 
   function scrollTo(section: ActiveSection) {
     sectionRefs[section].current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -334,80 +221,52 @@ export function Dashboard() {
 
   function openTool(toolId: string) {
     navigate("/");
-    setTimeout(() => {
-      window.dispatchEvent(
-        new CustomEvent("open-tool", { detail: { toolId } })
-      );
-    }, 100);
+    setTimeout(() => { window.dispatchEvent(new CustomEvent("open-tool", { detail: { toolId } })); }, 100);
   }
 
   async function handleChangeEmail() {
     if (!newEmail.trim()) return;
-    setEmailSaving(true);
-    setEmailMsg(null);
+    setEmailSaving(true); setEmailMsg(null);
     try {
       const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
       if (error) throw error;
       setEmailMsg({ ok: true, text: "Confirmation email sent. Check your inbox." });
       setNewEmail("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update email.";
-      setEmailMsg({ ok: false, text: msg });
-    } finally {
-      setEmailSaving(false);
-    }
+      setEmailMsg({ ok: false, text: err instanceof Error ? err.message : "Failed to update email." });
+    } finally { setEmailSaving(false); }
   }
 
   async function handleChangePassword() {
     if (!newPassword || newPassword !== confirmPassword) {
-      setPwMsg({ ok: false, text: "Passwords do not match." });
-      return;
+      setPwMsg({ ok: false, text: "Passwords do not match." }); return;
     }
     if (newPassword.length < 8) {
-      setPwMsg({ ok: false, text: "Password must be at least 8 characters." });
-      return;
+      setPwMsg({ ok: false, text: "Password must be at least 8 characters." }); return;
     }
-    setPwSaving(true);
-    setPwMsg(null);
+    setPwSaving(true); setPwMsg(null);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
       setPwMsg({ ok: true, text: "Password updated successfully." });
-      setNewPassword("");
-      setConfirmPassword("");
+      setNewPassword(""); setConfirmPassword("");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update password.";
-      setPwMsg({ ok: false, text: msg });
-    } finally {
-      setPwSaving(false);
-    }
+      setPwMsg({ ok: false, text: err instanceof Error ? err.message : "Failed to update password." });
+    } finally { setPwSaving(false); }
   }
 
   async function handleDeleteAccount() {
-    if (!deleteConfirm) {
-      setDeleteConfirm(true);
-      return;
-    }
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
     setDeleting(true);
-    try {
-      // Sign out — in production you would call a server function to delete the account
-      await signOut();
-      navigate("/");
-    } catch {
-      setDeleting(false);
-    }
+    try { await signOut(); navigate("/"); } catch { setDeleting(false); }
   }
-
-  // ---------------------------------------------------------------------------
-  // Loading / unauthenticated guard
-  // ---------------------------------------------------------------------------
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Loading dashboard…</p>
+      <div style={{ minHeight: "100vh", background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 32, height: 32, border: "2px solid var(--gray-200)", borderTopColor: "var(--red)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 16px" }} />
+          <p style={{ fontSize: 14, color: "var(--gray-400)" }}>Loading…</p>
         </div>
       </div>
     );
@@ -415,29 +274,13 @@ export function Dashboard() {
 
   if (!user) return null;
 
-  // ---------------------------------------------------------------------------
-  // Derived values
-  // ---------------------------------------------------------------------------
-
-  const displayName =
-    profile?.full_name ||
-    user.user_metadata?.full_name ||
-    user.email?.split("@")[0] ||
-    "User";
-
+  const displayName = profile?.full_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
   const currentPlan = profile?.plan ?? plan ?? "free";
   const dailyLimit = PLAN_LIMITS[currentPlan as PlanKey]?.dailyLimit ?? 5;
-  const dailyLimitLabel =
-    dailyLimit === Infinity ? "Unlimited" : String(dailyLimit);
-
+  const dailyLimitLabel = dailyLimit === Infinity ? "Unlimited" : String(dailyLimit);
   const daysLeft = daysUntil((profile as any)?.current_period_end);
   const memberSince = profile?.created_at ? formatDate(profile.created_at) : "—";
-
   const loading = dataLoading || planLoading;
-
-  // ---------------------------------------------------------------------------
-  // Sidebar nav items
-  // ---------------------------------------------------------------------------
 
   const navItems: { id: ActiveSection; label: string }[] = [
     { id: "overview", label: "Overview" },
@@ -446,60 +289,57 @@ export function Dashboard() {
     { id: "settings", label: "Settings" },
   ];
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  const inputStyle: React.CSSProperties = {
+    padding: "10px 14px", border: "var(--border)",
+    borderRadius: "var(--radius)", background: "var(--white)",
+    color: "var(--black)", fontSize: 14, outline: "none",
+    fontFamily: "var(--font)", boxSizing: "border-box",
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* ------------------------------------------------------------------ */}
+    <div style={{ minHeight: "100vh", background: "var(--gray-50)", fontFamily: "var(--font)" }}>
       {/* Top bar */}
-      {/* ------------------------------------------------------------------ */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          {/* Back link */}
+      <header style={{
+        background: "var(--white)", borderBottom: "var(--border)",
+        position: "sticky", top: 0, zIndex: 40,
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-500 transition-colors font-medium"
+            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--gray-400)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font)" }}
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
             Back to tools
           </button>
-
-          {/* Logo */}
-          <span className="font-extrabold text-red-500 tracking-tight text-lg select-none">
-            PDFcheck
+          <span style={{ fontSize: 16, fontWeight: 700, color: "var(--black)" }}>
+            PDF<span style={{ color: "var(--red)" }}>check</span>
           </span>
-
-          {/* User email */}
-          <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[200px]">
-            {user.email}
-          </span>
+          <span style={{ fontSize: 12, color: "var(--gray-400)" }}>{user.email}</span>
         </div>
       </header>
 
-      {/* ------------------------------------------------------------------ */}
       {/* Mobile tab bar */}
-      {/* ------------------------------------------------------------------ */}
-      <nav className="lg:hidden bg-white border-b border-gray-100 sticky top-14 z-30 overflow-x-auto">
-        <div className="flex min-w-max px-4">
+      <nav style={{
+        display: "none", background: "var(--white)",
+        borderBottom: "var(--border)", position: "sticky", top: 56, zIndex: 30,
+        overflowX: "auto",
+      }}
+        className="dashboard-mobile-nav"
+      >
+        <div style={{ display: "flex", minWidth: "max-content", padding: "0 24px" }}>
           {navItems.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => scrollTo(id)}
-              className={`px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${
-                activeSection === id
-                  ? "border-red-500 text-red-500"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+              style={{
+                padding: "12px 16px", background: "none", border: "none",
+                borderBottom: activeSection === id ? "2px solid var(--red)" : "2px solid transparent",
+                fontSize: 14, fontWeight: activeSection === id ? 600 : 400,
+                color: activeSection === id ? "var(--black)" : "var(--gray-400)",
+                cursor: "pointer", whiteSpace: "nowrap", fontFamily: "var(--font)",
+              }}
             >
               {label}
             </button>
@@ -507,181 +347,140 @@ export function Dashboard() {
         </div>
       </nav>
 
-      {/* ------------------------------------------------------------------ */}
       {/* Main layout */}
-      {/* ------------------------------------------------------------------ */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex gap-8">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:block w-52 flex-shrink-0">
-          <nav className="sticky top-24 bg-white rounded-2xl border border-gray-100 shadow-sm p-3 space-y-1">
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px", display: "flex", gap: 32 }}>
+        {/* Sidebar */}
+        <aside style={{ width: 220, flexShrink: 0 }}>
+          <nav style={{
+            position: "sticky", top: 88,
+            background: "var(--white)", border: "var(--border)",
+            borderRadius: "var(--radius)", padding: "8px",
+            display: "flex", flexDirection: "column", gap: 2,
+          }}>
             {navItems.map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => scrollTo(id)}
-                className={`w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                  activeSection === id
-                    ? "bg-red-50 text-red-500"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                }`}
+                style={{
+                  width: "100%", textAlign: "left",
+                  padding: "9px 12px",
+                  background: activeSection === id ? "var(--gray-50)" : "none",
+                  border: "none",
+                  borderLeft: activeSection === id ? "2px solid var(--red)" : "2px solid transparent",
+                  borderRadius: activeSection === id ? "0 var(--radius) var(--radius) 0" : "var(--radius)",
+                  fontSize: 14,
+                  fontWeight: activeSection === id ? 600 : 400,
+                  color: activeSection === id ? "var(--black)" : "var(--gray-600)",
+                  cursor: "pointer", fontFamily: "var(--font)",
+                  transition: "color var(--transition)",
+                }}
               >
                 {label}
               </button>
             ))}
+
+            <div style={{ height: 1, background: "var(--gray-200)", margin: "8px 0" }} />
+
+            {/* Plan badge */}
+            <div style={{ padding: "8px 12px" }}>
+              <span style={{
+                display: "inline-block", padding: "2px 8px",
+                background: currentPlan !== "free" ? "var(--red)" : "var(--gray-100)",
+                color: currentPlan !== "free" ? "#fff" : "var(--gray-600)",
+                borderRadius: 99, fontSize: 11, fontWeight: 600,
+              }}>
+                {planLabel(currentPlan)}
+              </span>
+            </div>
+
+            {/* Sign out */}
+            <button
+              onClick={async () => { await signOut(); navigate("/"); }}
+              style={{
+                width: "100%", textAlign: "left", padding: "9px 12px",
+                background: "none", border: "none", fontSize: 14,
+                color: "var(--red)", cursor: "pointer", fontFamily: "var(--font)",
+                borderRadius: "var(--radius)",
+              }}
+            >
+              Sign out
+            </button>
           </nav>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 min-w-0 space-y-10">
-          {/* ---------------------------------------------------------------- */}
-          {/* OVERVIEW SECTION */}
-          {/* ---------------------------------------------------------------- */}
+        <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 32 }}>
+          {/* OVERVIEW */}
           <section ref={sectionRefs.overview} id="overview">
-            {/* Welcome header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-              <div>
-                {loading ? (
-                  <>
-                    <Skeleton className="h-8 w-56 mb-2" />
-                    <Skeleton className="h-4 w-40" />
-                  </>
-                ) : (
-                  <>
-                    <h1 className="text-2xl font-extrabold text-gray-800">
-                      Welcome back, {displayName}!
-                    </h1>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${planColor(currentPlan)}`}
-                      >
-                        {planLabel(currentPlan)}
-                      </span>
-                      {daysLeft !== null && (
-                        <span className="text-xs text-gray-400">
-                          {daysLeft === 0
-                            ? "Expires today"
-                            : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left`}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
+            <div style={{ marginBottom: 24 }}>
+              <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--black)", marginBottom: 4 }}>
+                Welcome back, {displayName}
+              </h1>
+              {daysLeft !== null && (
+                <p style={{ fontSize: 13, color: "var(--gray-400)" }}>
+                  {daysLeft === 0 ? "Subscription expires today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""} left on ${planLabel(currentPlan)}`}
+                </p>
+              )}
             </div>
 
-            {/* Stats cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <StatCard
-                loading={loading}
-                label="Tools today"
-                value={loading ? "—" : `${jobsToday} / ${dailyLimitLabel}`}
-                sub="completed jobs"
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Max file size"
-                value={loading ? "—" : `${maxFileMb} MB`}
-                sub="per file upload"
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Current plan"
-                value={loading ? "—" : planLabel(currentPlan)}
-                sub={currentPlan === "free" ? "Free tier" : "Paid subscription"}
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                }
-              />
-              <StatCard
-                loading={loading}
-                label="Member since"
-                value={loading ? "—" : memberSince}
-                icon={
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                }
-              />
+            {/* Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, marginBottom: 24 }}>
+              <StatCard loading={loading} label="Tools today" value={loading ? "—" : `${jobsToday} / ${dailyLimitLabel}`} sub="completed jobs" />
+              <StatCard loading={loading} label="Max file size" value={loading ? "—" : `${maxFileMb} MB`} sub="per upload" />
+              <StatCard loading={loading} label="Current plan" value={loading ? "—" : planLabel(currentPlan)} sub={currentPlan === "free" ? "Free tier" : "Paid"} />
+              <StatCard loading={loading} label="Member since" value={loading ? "—" : memberSince} />
             </div>
 
-            {/* Usage chart */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
-                Tools used — last 30 days
-              </h2>
+            {/* Chart */}
+            <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 24, marginBottom: 24 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 20 }}>
+                TOOLS USED — LAST 30 DAYS
+              </p>
               {loading ? (
-                <Skeleton className="h-48 w-full" />
+                <div style={{ height: 160, background: "var(--gray-50)", borderRadius: "var(--radius)" }} />
               ) : (
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={160}>
                   <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="usageGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.18} />
-                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--red)" stopOpacity={0.12} />
+                        <stop offset="95%" stopColor="var(--red)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={4}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
-                      tickLine={false}
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-100)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: "var(--gray-400)" }} tickLine={false} axisLine={false} interval={4} />
+                    <YAxis tick={{ fontSize: 10, fill: "var(--gray-400)" }} tickLine={false} axisLine={false} allowDecimals={false} />
                     <Tooltip
-                      contentStyle={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                        boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
-                      }}
-                      itemStyle={{ color: "#ef4444" }}
-                      labelStyle={{ color: "#6b7280", fontWeight: 600 }}
+                      contentStyle={{ border: "var(--border)", borderRadius: "var(--radius)", fontSize: 12 }}
+                      itemStyle={{ color: "var(--red)" }}
+                      labelStyle={{ color: "var(--gray-600)", fontWeight: 600 }}
                     />
-                    <Area
-                      type="monotone"
-                      dataKey="jobs"
-                      stroke="#ef4444"
-                      strokeWidth={2}
-                      fill="url(#usageGrad)"
-                      dot={false}
-                      activeDot={{ r: 4, fill: "#ef4444" }}
-                    />
+                    <Area type="monotone" dataKey="jobs" stroke="var(--red)" strokeWidth={2} fill="url(#usageGrad)" dot={false} activeDot={{ r: 4, fill: "var(--red)" }} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
             </div>
 
             {/* Quick actions */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mt-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-                Quick actions
-              </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {QUICK_ACTIONS.map(({ id, label, icon }) => (
+            <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 24 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 16 }}>
+                QUICK ACTIONS
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 8 }}>
+                {QUICK_ACTIONS.map(({ id, label }) => (
                   <button
                     key={id}
                     onClick={() => openTool(id)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-700 text-sm font-semibold transition-colors"
+                    style={{
+                      padding: "10px 14px", border: "var(--border)",
+                      borderRadius: "var(--radius)", background: "var(--white)",
+                      fontSize: 13, color: "var(--black)", cursor: "pointer",
+                      textAlign: "left", fontFamily: "var(--font)", fontWeight: 500,
+                      transition: "border-color var(--transition), background var(--transition)",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--black)"; e.currentTarget.style.background = "var(--gray-50)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--gray-200)"; e.currentTarget.style.background = "var(--white)"; }}
                   >
-                    <span className="text-base leading-none select-none">{icon}</span>
                     {label}
                   </button>
                 ))}
@@ -689,94 +488,69 @@ export function Dashboard() {
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* RECENT FILES SECTION */}
-          {/* ---------------------------------------------------------------- */}
+          {/* RECENT FILES */}
           <section ref={sectionRefs.files} id="files">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
-                Recent files
-              </h2>
-
+            <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 24 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 20 }}>
+                RECENT FILES
+              </p>
               {loading ? (
-                <div className="space-y-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full" />
+                    <div key={i} style={{ height: 48, background: "var(--gray-50)", borderRadius: "var(--radius)" }} />
                   ))}
                 </div>
               ) : recentJobs.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <svg
-                    className="w-10 h-10 mx-auto mb-3 opacity-30"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <p className="text-sm font-medium">No files yet</p>
-                  <p className="text-xs mt-1">Use a tool to process your first PDF.</p>
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <p style={{ fontSize: 14, color: "var(--gray-400)" }}>No files yet</p>
+                  <p style={{ fontSize: 13, color: "var(--gray-400)", marginTop: 4 }}>Use a tool to process your first PDF.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-50">
-                  {recentJobs.map((job) => {
-                    const blobUrl =
-                      job.metadata && typeof job.metadata === "object"
-                        ? (job.metadata as Record<string, unknown>).blobUrl as string | undefined
-                        : undefined;
-
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {recentJobs.map((job, i) => {
+                    const blobUrl = job.metadata && typeof job.metadata === "object"
+                      ? (job.metadata as Record<string, unknown>).blobUrl as string | undefined
+                      : undefined;
                     return (
                       <div
                         key={job.id}
-                        className="flex items-center justify-between py-3.5 gap-4"
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          gap: 16, padding: "14px 0",
+                          borderTop: i > 0 ? "var(--border)" : "none",
+                          background: i % 2 === 0 ? "var(--white)" : "var(--gray-50)",
+                        }}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {/* Tool icon */}
-                          <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="w-4 h-4 text-red-400"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={2}
-                              viewBox="0 0 24 24"
-                            >
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                          <div style={{
+                            width: 32, height: 32, border: "var(--border)",
+                            borderRadius: "var(--radius)", background: "var(--white)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            flexShrink: 0, color: "var(--red)",
+                          }}>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-700 truncate">
+                          <div style={{ minWidth: 0 }}>
+                            <p style={{ fontSize: 14, fontWeight: 500, color: "var(--black)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {toolLabel(job.tool)}
                             </p>
-                            <p className="text-xs text-gray-400">{relativeTime(job.created_at)}</p>
+                            <p style={{ fontSize: 12, color: "var(--gray-400)" }}>{relativeTime(job.created_at)}</p>
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          {/* Status badge */}
-                          <span
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                              job.status === "done"
-                                ? "bg-green-50 text-green-600 border-green-200"
-                                : job.status === "error"
-                                ? "bg-red-50 text-red-500 border-red-200"
-                                : "bg-amber-50 text-amber-600 border-amber-200"
-                            }`}
-                          >
-                            {job.status === "done"
-                              ? "Done"
-                              : job.status === "error"
-                              ? "Error"
-                              : "Processing"}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+                          <span style={{
+                            fontSize: 11, fontWeight: 600, padding: "3px 10px",
+                            border: job.status === "done" ? "1px solid var(--gray-200)" : job.status === "error" ? "1px solid var(--red)" : "1px solid var(--gray-200)",
+                            borderRadius: 99,
+                            color: job.status === "done" ? "var(--black)" : job.status === "error" ? "var(--red)" : "var(--gray-400)",
+                            background: "var(--white)",
+                          }}>
+                            {job.status === "done" ? "Done" : job.status === "error" ? "Error" : "Processing"}
                           </span>
-
-                          {/* Re-download button */}
                           {job.status === "done" && blobUrl && (
-                            <a
-                              href={blobUrl}
-                              download
-                              className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
-                            >
+                            <a href={blobUrl} download style={{ fontSize: 13, fontWeight: 600, color: "var(--red)", textDecoration: "none" }}>
                               Download
                             </a>
                           )}
@@ -789,91 +563,75 @@ export function Dashboard() {
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* BILLING SECTION */}
-          {/* ---------------------------------------------------------------- */}
+          {/* BILLING */}
           <section ref={sectionRefs.billing} id="billing">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-5">
-                Billing
-              </h2>
-
+            <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 24 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 20 }}>
+                BILLING
+              </p>
               {loading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-6 w-40" />
-                  <Skeleton className="h-4 w-56" />
-                  <Skeleton className="h-4 w-44" />
-                  <div className="flex gap-3 pt-3">
-                    <Skeleton className="h-10 w-36" />
-                    <Skeleton className="h-10 w-28" />
-                  </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ height: 20, width: 120, background: "var(--gray-100)", borderRadius: 4 }} />
+                  <div style={{ height: 14, width: 200, background: "var(--gray-100)", borderRadius: 4 }} />
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span
-                      className={`text-sm font-bold px-3 py-1 rounded-full border ${planColor(currentPlan)}`}
-                    >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                    <span style={{
+                      fontSize: 14, fontWeight: 700, color: "var(--black)",
+                      padding: "4px 12px", border: "var(--border)", borderRadius: 99,
+                    }}>
                       {planLabel(currentPlan)} Plan
                     </span>
-                    {profile?.stripe_subscription_id ? (
-                      <span className="text-xs text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded-full border border-green-200">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400 font-semibold bg-gray-50 px-2 py-0.5 rounded-full border border-gray-200">
-                        Free tier
-                      </span>
-                    )}
+                    <span style={{
+                      fontSize: 11, color: profile?.stripe_subscription_id ? "var(--black)" : "var(--gray-400)",
+                      fontWeight: 600,
+                    }}>
+                      {profile?.stripe_subscription_id ? "Active" : "Free tier"}
+                    </span>
                   </div>
-
                   {(profile as any)?.current_period_end && (
-                    <p className="text-sm text-gray-500 mb-1">
-                      <span className="font-semibold text-gray-700">Next billing date:</span>{" "}
+                    <p style={{ fontSize: 14, color: "var(--gray-600)", marginBottom: 8 }}>
+                      <span style={{ fontWeight: 600, color: "var(--black)" }}>Next billing:</span>{" "}
                       {formatDate((profile as any).current_period_end)}
                     </p>
                   )}
-
                   {daysLeft !== null && (
-                    <p className="text-sm text-gray-500 mb-5">
-                      <span className="font-semibold text-gray-700">Days remaining:</span>{" "}
+                    <p style={{ fontSize: 14, color: "var(--gray-600)", marginBottom: 16 }}>
+                      <span style={{ fontWeight: 600, color: "var(--black)" }}>Days remaining:</span>{" "}
                       {daysLeft === 0 ? "Expires today" : `${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}
                     </p>
                   )}
-
                   {!daysLeft && currentPlan === "free" && (
-                    <p className="text-sm text-gray-400 mb-5">
+                    <p style={{ fontSize: 14, color: "var(--gray-400)", marginBottom: 16 }}>
                       You are on the free plan. Upgrade to unlock more features.
                     </p>
                   )}
-
-                  <div className="flex flex-wrap gap-3 mt-4">
+                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
                     {profile?.stripe_subscription_id && (
                       <button
-                        onClick={() =>
-                          window.dispatchEvent(new CustomEvent("open-billing"))
-                        }
-                        className="px-5 py-2.5 rounded-xl bg-gray-800 text-white text-sm font-semibold hover:bg-gray-700 transition-colors"
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-billing"))}
+                        style={{
+                          padding: "10px 20px", background: "var(--white)", color: "var(--black)",
+                          border: "1px solid var(--black)", borderRadius: "var(--radius)",
+                          fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "var(--font)",
+                        }}
                       >
-                        Manage Billing
+                        Manage billing
                       </button>
                     )}
                     <a
                       href="/#pricing"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        navigate("/");
-                        setTimeout(
-                          () =>
-                            document
-                              .getElementById("pricing")
-                              ?.scrollIntoView({ behavior: "smooth" }),
-                          150
-                        );
+                      onClick={(e) => { e.preventDefault(); navigate("/"); setTimeout(() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" }), 150); }}
+                      style={{
+                        display: "inline-block", padding: "10px 20px",
+                        background: "var(--red)", color: "#fff",
+                        border: "none", borderRadius: "var(--radius)",
+                        fontSize: 14, fontWeight: 600, cursor: "pointer",
+                        textDecoration: "none",
                       }}
-                      className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
                     >
-                      Upgrade Plan
+                      Upgrade plan
                     </a>
                   </div>
                 </div>
@@ -881,110 +639,98 @@ export function Dashboard() {
             </div>
           </section>
 
-          {/* ---------------------------------------------------------------- */}
-          {/* SETTINGS SECTION */}
-          {/* ---------------------------------------------------------------- */}
-          <section ref={sectionRefs.settings} id="settings" className="pb-16">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-8">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                Account settings
-              </h2>
+          {/* SETTINGS */}
+          <section ref={sectionRefs.settings} id="settings" style={{ paddingBottom: 64 }}>
+            <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 24, display: "flex", flexDirection: "column", gap: 24 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)" }}>
+                ACCOUNT SETTINGS
+              </p>
 
               {/* Change email */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-3">Change email</h3>
-                <div className="flex gap-3 flex-wrap">
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--black)", marginBottom: 12 }}>Change email</p>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                   <input
-                    type="email"
-                    placeholder={user.email ?? "New email address"}
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    className="flex-1 min-w-0 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
+                    type="email" placeholder={user.email ?? "New email address"}
+                    value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
+                    style={{ ...inputStyle, flex: 1, minWidth: 200 }}
                   />
                   <button
-                    onClick={handleChangeEmail}
-                    disabled={emailSaving || !newEmail.trim()}
-                    className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={handleChangeEmail} disabled={emailSaving || !newEmail.trim()}
+                    style={{
+                      padding: "10px 20px", background: "var(--red)", color: "#fff",
+                      border: "none", borderRadius: "var(--radius)", fontSize: 14,
+                      fontWeight: 600, cursor: emailSaving || !newEmail.trim() ? "not-allowed" : "pointer",
+                      opacity: emailSaving || !newEmail.trim() ? 0.5 : 1, fontFamily: "var(--font)",
+                    }}
                   >
                     {emailSaving ? "Saving…" : "Save"}
                   </button>
                 </div>
                 {emailMsg && (
-                  <p
-                    className={`text-xs mt-2 font-medium ${
-                      emailMsg.ok ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
+                  <p style={{ fontSize: 13, marginTop: 8, color: emailMsg.ok ? "var(--black)" : "var(--red)", fontWeight: 500 }}>
                     {emailMsg.text}
                   </p>
                 )}
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+              <div style={{ height: 1, background: "var(--gray-200)" }} />
 
               {/* Change password */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-3">Change password</h3>
-                <div className="space-y-3 max-w-sm">
-                  <input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-transparent placeholder-gray-300"
-                  />
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--black)", marginBottom: 12 }}>Change password</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 360 }}>
+                  <input type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} />
+                  <input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} />
                   <button
-                    onClick={handleChangePassword}
-                    disabled={pwSaving || !newPassword}
-                    className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={handleChangePassword} disabled={pwSaving || !newPassword}
+                    style={{
+                      padding: "10px 20px", background: "var(--red)", color: "#fff",
+                      border: "none", borderRadius: "var(--radius)", fontSize: 14,
+                      fontWeight: 600, cursor: pwSaving || !newPassword ? "not-allowed" : "pointer",
+                      opacity: pwSaving || !newPassword ? 0.5 : 1, fontFamily: "var(--font)",
+                      alignSelf: "flex-start",
+                    }}
                   >
                     {pwSaving ? "Saving…" : "Update password"}
                   </button>
                 </div>
                 {pwMsg && (
-                  <p
-                    className={`text-xs mt-2 font-medium ${
-                      pwMsg.ok ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
+                  <p style={{ fontSize: 13, marginTop: 8, color: pwMsg.ok ? "var(--black)" : "var(--red)", fontWeight: 500 }}>
                     {pwMsg.text}
                   </p>
                 )}
               </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+              <div style={{ height: 1, background: "var(--gray-200)" }} />
 
               {/* Delete account */}
               <div>
-                <h3 className="text-sm font-bold text-gray-700 mb-1">Delete account</h3>
-                <p className="text-xs text-gray-400 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be
-                  undone.
+                <p style={{ fontSize: 14, fontWeight: 600, color: "var(--black)", marginBottom: 4 }}>Delete account</p>
+                <p style={{ fontSize: 13, color: "var(--gray-400)", marginBottom: 16 }}>
+                  Permanently delete your account and all data. This cannot be undone.
                 </p>
                 {deleteConfirm ? (
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-sm text-red-500 font-semibold">
-                      Are you absolutely sure?
-                    </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 14, color: "var(--red)", fontWeight: 600 }}>Are you absolutely sure?</span>
                     <button
-                      onClick={handleDeleteAccount}
-                      disabled={deleting}
-                      className="px-5 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 disabled:opacity-50 transition-colors"
+                      onClick={handleDeleteAccount} disabled={deleting}
+                      style={{
+                        padding: "10px 20px", background: "var(--red)", color: "#fff",
+                        border: "none", borderRadius: "var(--radius)", fontSize: 14,
+                        fontWeight: 600, cursor: "pointer", fontFamily: "var(--font)",
+                        opacity: deleting ? 0.6 : 1,
+                      }}
                     >
                       {deleting ? "Deleting…" : "Yes, delete my account"}
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(false)}
-                      className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors"
+                      style={{
+                        padding: "10px 20px", background: "var(--white)", color: "var(--black)",
+                        border: "var(--border)", borderRadius: "var(--radius)", fontSize: 14,
+                        fontWeight: 600, cursor: "pointer", fontFamily: "var(--font)",
+                      }}
                     >
                       Cancel
                     </button>
@@ -992,7 +738,11 @@ export function Dashboard() {
                 ) : (
                   <button
                     onClick={() => setDeleteConfirm(true)}
-                    className="px-5 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
+                    style={{
+                      padding: "10px 20px", background: "var(--white)", color: "var(--red)",
+                      border: "1px solid var(--red)", borderRadius: "var(--radius)", fontSize: 14,
+                      fontWeight: 600, cursor: "pointer", fontFamily: "var(--font)",
+                    }}
                   >
                     Delete account
                   </button>

@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary SEO -->
+    <!-- SEO -->
     <title>PDFcheck – Free Online PDF Tools | Merge, Split, Compress PDF</title>
-    <meta name="description" content="PDFcheck offers 23 free online PDF tools — merge, split, compress, convert, rotate, watermark and unlock PDFs. No signup, no watermark, works in any browser." />
+    <meta name="description" content="23 free online PDF tools — merge, split, compress, convert, rotate, watermark and unlock PDFs. No signup, no watermark, works in any browser." />
     <meta name="keywords" content="PDF tools, merge PDF, split PDF, compress PDF, convert PDF, PDF to Word, JPG to PDF, online PDF editor, free PDF tools" />
     <link rel="canonical" href="https://pdf-tool-website-review.vercel.app/" />
     <meta name="robots" content="index, follow" />
@@ -18,27 +18,36 @@
     <meta property="og:description" content="23 free PDF tools in your browser. Merge, split, compress, convert — no signup, no watermark." />
     <meta property="og:image" content="https://pdf-tool-website-review.vercel.app/og-image.png" />
     <meta property="og:site_name" content="PDFcheck" />
-    <meta property="og:locale" content="en_US" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="PDFcheck – Free Online PDF Tools" />
-    <meta name="twitter:description" content="23 free PDF tools in your browser. No signup required." />
+    <meta name="twitter:description" content="23 free PDF tools. No signup required." />
     <meta name="twitter:image" content="https://pdf-tool-website-review.vercel.app/og-image.png" />
 
     <!-- Theme & PWA -->
-    <meta name="theme-color" content="#ef4444" />
+    <meta name="theme-color" content="#E53E3E" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="PDFcheck" />
 
-    <!-- Google Fonts — preconnect for speed, then load Inter -->
+    <!-- Inter font — preconnect for speed -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+
+    <!-- Dark mode — prevent flash -->
+    <script>
+      (function(){
+        var t = localStorage.getItem('theme');
+        if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
 
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -50,23 +59,13 @@
       "description": "Free online PDF tools — merge, split, compress, convert PDFs. No signup required.",
       "applicationCategory": "UtilitiesApplication",
       "operatingSystem": "Web",
-      "browserRequirements": "Requires JavaScript",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "featureList": "Merge PDF, Split PDF, Compress PDF, PDF to Word, JPG to PDF, Rotate PDF, Watermark PDF, Protect PDF, Unlock PDF, OCR PDF",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "1240",
-        "bestRating": "5"
-      }
+      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.8", "reviewCount": "1240", "bestRating": "5" }
     }
     </script>
 
-    <!-- Plausible analytics (privacy-friendly, no cookies) -->
+    <!-- Analytics -->
     <script defer data-domain="pdf-tool-website-review.vercel.app" src="https://plausible.io/js/script.js"></script>
   </head>
   <body>

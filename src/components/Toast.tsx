@@ -4,53 +4,35 @@ import { toastBus, type Toast } from "../lib/toast";
 const DEFAULT_DURATION = 3500;
 const MAX_TOASTS = 5;
 
-const typeStyles: Record<Toast["type"], {
-  bar: string; icon: JSX.Element; bg: string; border: string; title: string; iconBg: string;
-}> = {
+const typeConfig: Record<Toast["type"], { bar: string; icon: React.ReactNode }> = {
   success: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-emerald-200 dark:border-emerald-800",
-    bar: "bg-emerald-500",
-    iconBg: "bg-emerald-50 dark:bg-emerald-950/50",
-    title: "text-gray-900 dark:text-gray-100",
+    bar: "var(--black)",
     icon: (
-      <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "var(--black)" }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
   error: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-red-200 dark:border-red-800",
-    bar: "bg-red-500",
-    iconBg: "bg-red-50 dark:bg-red-950/50",
-    title: "text-gray-900 dark:text-gray-100",
+    bar: "var(--red)",
     icon: (
-      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "var(--red)" }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
   info: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-indigo-200 dark:border-indigo-800",
-    bar: "bg-indigo-500",
-    iconBg: "bg-indigo-50 dark:bg-indigo-950/50",
-    title: "text-gray-900 dark:text-gray-100",
+    bar: "var(--gray-400)",
     icon: (
-      <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "var(--gray-400)" }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
   },
   warning: {
-    bg: "bg-white dark:bg-gray-900",
-    border: "border-amber-200 dark:border-amber-800",
-    bar: "bg-amber-400",
-    iconBg: "bg-amber-50 dark:bg-amber-950/50",
-    title: "text-gray-900 dark:text-gray-100",
+    bar: "var(--red)",
     icon: (
-      <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" style={{ color: "var(--red)" }}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
       </svg>
     ),
@@ -60,7 +42,7 @@ const typeStyles: Record<Toast["type"], {
 interface ToastItem extends Toast { visible: boolean; }
 
 function ToastItem({ item, onDismiss }: { item: ToastItem; onDismiss: (id: string) => void }) {
-  const styles = typeStyles[item.type];
+  const config = typeConfig[item.type];
   const duration = item.duration ?? DEFAULT_DURATION;
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -71,36 +53,57 @@ function ToastItem({ item, onDismiss }: { item: ToastItem; onDismiss: (id: strin
 
   return (
     <div
-      className={`relative flex items-start gap-3 ${styles.bg} border ${styles.border} rounded-2xl shadow-lg dark:shadow-black/30 px-4 py-3.5 max-w-sm w-full overflow-hidden
-        transition-all duration-300 ease-out
-        ${item.visible ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"}`}
       role="alert"
       aria-live="assertive"
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 12,
+        background: "var(--white)",
+        border: "var(--border)",
+        borderRadius: "var(--radius)",
+        padding: "12px 14px",
+        maxWidth: 360,
+        width: "100%",
+        overflow: "hidden",
+        transition: "transform 300ms ease, opacity 300ms ease",
+        transform: item.visible ? "translateY(0)" : "translateY(-8px)",
+        opacity: item.visible ? 1 : 0,
+      }}
     >
-      {/* Bottom progress bar */}
+      {/* Progress bar */}
       <div
-        className={`absolute bottom-0 left-0 h-0.5 ${styles.bar} rounded-full`}
         style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: 2,
+          background: config.bar,
+          borderRadius: 1,
           animation: `shrink ${duration}ms linear forwards`,
           width: "100%",
         }}
       />
 
       {/* Icon */}
-      <div className={`w-8 h-8 rounded-xl ${styles.iconBg} flex items-center justify-center flex-shrink-0`}>
-        {styles.icon}
+      <div style={{ flexShrink: 0, marginTop: 1 }}>
+        {config.icon}
       </div>
 
-      <p className={`text-sm font-medium ${styles.title} flex-1 leading-snug pr-2 pt-1`}>
+      <p style={{ fontSize: 13, fontWeight: 500, color: "var(--black)", flex: 1, lineHeight: 1.5, paddingRight: 8 }}>
         {item.message}
       </p>
 
       <button
         onClick={() => onDismiss(item.id)}
-        className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors mt-1"
         aria-label="Dismiss"
+        style={{
+          flexShrink: 0, color: "var(--gray-400)", background: "none",
+          border: "none", cursor: "pointer", padding: 2, marginTop: 1,
+        }}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
@@ -130,9 +133,22 @@ export function ToastContainer() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 items-end pointer-events-none" aria-label="Notifications">
+    <div
+      aria-label="Notifications"
+      style={{
+        position: "fixed",
+        top: 16,
+        right: 16,
+        zIndex: 9999,
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        alignItems: "flex-end",
+        pointerEvents: "none",
+      }}
+    >
       {toasts.map((item) => (
-        <div key={item.id} className="pointer-events-auto">
+        <div key={item.id} style={{ pointerEvents: "auto" }}>
           <ToastItem item={item} onDismiss={dismiss} />
         </div>
       ))}

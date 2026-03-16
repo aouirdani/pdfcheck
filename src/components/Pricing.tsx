@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check, Minus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { usePlan } from "../hooks/usePlan";
 import { supabase } from "../lib/supabase";
@@ -6,39 +7,88 @@ import { supabase } from "../lib/supabase";
 const PRICES = {
   starter: {
     monthly: import.meta.env.VITE_STRIPE_STARTER_MONTHLY_PRICE_ID as string,
-    yearly: import.meta.env.VITE_STRIPE_STARTER_YEARLY_PRICE_ID as string,
+    yearly:  import.meta.env.VITE_STRIPE_STARTER_YEARLY_PRICE_ID as string,
   },
   pro: {
     monthly: import.meta.env.VITE_STRIPE_PRO_MONTHLY_PRICE_ID as string,
-    yearly: import.meta.env.VITE_STRIPE_PRO_YEARLY_PRICE_ID as string,
+    yearly:  import.meta.env.VITE_STRIPE_PRO_YEARLY_PRICE_ID as string,
   },
   team: {
     monthly: import.meta.env.VITE_STRIPE_TEAM_MONTHLY_PRICE_ID as string,
-    yearly: import.meta.env.VITE_STRIPE_TEAM_YEARLY_PRICE_ID as string,
+    yearly:  import.meta.env.VITE_STRIPE_TEAM_YEARLY_PRICE_ID as string,
   },
 };
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 
-const COMPARISON_FEATURES = [
-  { label: "PDF tools", free: "All 20+", starter: "All 20+", pro: "All 20+", team: "All 20+" },
-  { label: "Daily tasks", free: "5/day", starter: "50/day", pro: "Unlimited", team: "Unlimited" },
-  { label: "Max file size", free: "25 MB", starter: "100 MB", pro: "500 MB", team: "1 GB" },
-  { label: "Watermark on output", free: true, starter: false, pro: false, team: false },
-  { label: "OCR & conversions", free: false, starter: false, pro: true, team: true },
-  { label: "Priority processing", free: false, starter: false, pro: true, team: true },
-  { label: "Team seats", free: "1", starter: "1", pro: "1", team: "5" },
-  { label: "API access", free: false, starter: false, pro: false, team: true },
-  { label: "Team dashboard", free: false, starter: false, pro: false, team: true },
+const COMPARE = [
+  { label: "PDF tools",         free: "All 23",    starter: "All 23",    pro: "All 23",     team: "All 23" },
+  { label: "Daily tasks",       free: "5/day",     starter: "50/day",    pro: "Unlimited",  team: "Unlimited" },
+  { label: "Max file size",     free: "25 MB",     starter: "100 MB",    pro: "500 MB",     team: "1 GB" },
+  { label: "Watermark",         free: true,        starter: false,       pro: false,        team: false },
+  { label: "OCR & conversions", free: false,       starter: false,       pro: true,         team: true },
+  { label: "Priority",          free: false,       starter: false,       pro: true,         team: true },
+  { label: "Team seats",        free: "1",         starter: "1",         pro: "1",          team: "5" },
+  { label: "API access",        free: false,       starter: false,       pro: false,        team: true },
 ];
 
 const FAQ = [
-  { q: "Is there really a free plan?", a: "Yes! You can use all 20+ PDF tools for free, with 5 tasks per day and a 25 MB file size limit. No credit card required." },
-  { q: "Can I cancel anytime?", a: "Absolutely. Cancel your subscription at any time from your dashboard. You'll keep access until the end of your billing period." },
-  { q: "Is my data secure?", a: "All files are encrypted with SSL/TLS and automatically deleted from our servers after 2 hours. We never sell or share your data." },
-  { q: "What's the free trial?", a: "New users get a 7-day free trial of any paid plan. No charge until the trial ends, and you can cancel anytime." },
-  { q: "Do you offer refunds?", a: "Yes, we offer a 30-day money-back guarantee on all paid plans. No questions asked." },
+  { q: "Is there really a free plan?", a: "Yes — all 23 tools, 5 tasks/day, 25 MB limit. No credit card." },
+  { q: "Can I cancel anytime?", a: "Yes. Cancel from your dashboard and keep access until the billing period ends." },
+  { q: "Is my data secure?", a: "Files are encrypted with TLS and deleted automatically after 2 hours." },
+  { q: "What's the free trial?", a: "New users get 7 days free on any paid plan. No charge until the trial ends." },
+  { q: "Do you offer refunds?", a: "30-day money-back guarantee, no questions asked." },
 ];
+
+const PLANS = [
+  {
+    key:   "free" as const,
+    name:  "Free",
+    mo:    "€0",
+    yr:    "€0",
+    desc:  "Essential tools",
+    feats: ["All 23 PDF tools", "5 tasks/day", "25 MB limit"],
+    cta:   "Start for free",
+    style: "ghost",
+  },
+  {
+    key:   "starter" as const,
+    name:  "Starter",
+    mo:    "€1.99",
+    yr:    "€1.25",
+    yrNote:"€15/year",
+    save:  "37%",
+    desc:  "Regular users",
+    feats: ["All 23 PDF tools", "50 tasks/day", "100 MB limit", "No watermark"],
+    cta:   "Start trial",
+    style: "black",
+  },
+  {
+    key:   "pro" as const,
+    name:  "Pro",
+    mo:    "€4.99",
+    yr:    "€3.25",
+    yrNote:"€39/year",
+    save:  "35%",
+    desc:  "Unlimited access",
+    feats: ["All 23 PDF tools", "Unlimited tasks", "500 MB limit", "No watermark", "OCR & conversions", "Priority processing"],
+    cta:   "Start trial",
+    style: "red",
+    highlight: true,
+  },
+  {
+    key:   "team" as const,
+    name:  "Team",
+    mo:    "€9.99",
+    yr:    "€6.58",
+    yrNote:"€79/year",
+    save:  "34%",
+    desc:  "Pro + team features",
+    feats: ["Everything in Pro", "5 team seats", "1 GB limit", "API access"],
+    cta:   "Start trial",
+    style: "black",
+  },
+] as const;
 
 export function Pricing() {
   const { user } = useAuth();
@@ -51,342 +101,250 @@ export function Pricing() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   const handleCheckout = async (planKey: "starter" | "pro" | "team") => {
-    if (!user) {
-      window.dispatchEvent(new CustomEvent("open-auth"));
-      return;
-    }
-    setLoading(planKey);
-    setError("");
+    if (!user) { window.dispatchEvent(new CustomEvent("open-auth")); return; }
+    setLoading(planKey); setError("");
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !session?.access_token) {
-        window.dispatchEvent(new CustomEvent("open-auth"));
-        return;
-      }
+      const { data: { session }, error: sErr } = await supabase.auth.getSession();
+      if (sErr || !session?.access_token) { window.dispatchEvent(new CustomEvent("open-auth")); return; }
       const priceId = PRICES[planKey][billing];
       const res = await fetch(`${SUPABASE_URL}/functions/v1/create-checkout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
-        body: JSON.stringify({
-          priceId,
-          successUrl: `${window.location.origin}/dashboard?checkout=success`,
-          cancelUrl: `${window.location.origin}/?checkout=cancelled`,
-          promoCode: promoApplied || undefined,
-          trial: !currentPlan || currentPlan === "free",
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ priceId, successUrl: `${window.location.origin}/dashboard?checkout=success`, cancelUrl: `${window.location.origin}/?checkout=cancelled`, promoCode: promoApplied || undefined, trial: !currentPlan || currentPlan === "free" }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? `Server error ${res.status}`);
       if (data?.url) window.location.href = data.url;
-      else throw new Error(data?.error ?? "No checkout URL returned");
+      else throw new Error("No checkout URL returned");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
+      setError(err instanceof Error ? err.message : "Checkout failed. Try again.");
     } finally {
       setLoading(null);
     }
   };
 
-  const isCurrentPlan = (planKey: string) => {
-    if (planKey === "free") return !currentPlan || currentPlan === "free";
-    if (planKey === "pro") return currentPlan === "premium";
-    return currentPlan === planKey;
+  const isCurrent = (k: string) => {
+    if (k === "free") return !currentPlan || currentPlan === "free";
+    if (k === "pro") return currentPlan === "premium";
+    return currentPlan === k;
   };
 
-  const plans = [
-    {
-      key: "free" as const,
-      name: "Free",
-      monthlyPrice: "€0",
-      yearlyPrice: "€0",
-      description: "Essential tools with daily limits",
-      badge: null,
-      cardClass: "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900",
-      btnClass: "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700",
-      features: ["All 20+ PDF tools", "5 tasks per day", "25 MB max file size"],
-    },
-    {
-      key: "starter" as const,
-      name: "Starter",
-      monthlyPrice: "€1.99",
-      yearlyPrice: "€1.25",
-      yearlyNote: "€15 billed annually",
-      yearSave: "37%",
-      description: "More power for regular users",
-      badge: null,
-      cardClass: "border-indigo-200 dark:border-indigo-800 bg-white dark:bg-gray-900",
-      btnClass: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200/40 dark:shadow-indigo-900/40",
-      features: ["All 20+ PDF tools", "50 tasks per day", "100 MB max file size", "No watermark"],
-    },
-    {
-      key: "pro" as const,
-      name: "Pro",
-      monthlyPrice: "€4.99",
-      yearlyPrice: "€3.25",
-      yearlyNote: "€39 billed annually",
-      yearSave: "35%",
-      description: "Unlimited access to every tool",
-      badge: "Most Popular",
-      cardClass: "border-violet-400 dark:border-violet-600 bg-gradient-to-b from-indigo-50/50 to-violet-50/50 dark:from-indigo-950/30 dark:to-violet-950/30",
-      btnClass: "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white shadow-md shadow-indigo-200/40 dark:shadow-indigo-900/40",
-      features: ["All 20+ PDF tools", "Unlimited tasks", "500 MB max file size", "No watermark", "OCR & conversions", "Priority processing"],
-    },
-    {
-      key: "team" as const,
-      name: "Team",
-      monthlyPrice: "€9.99",
-      yearlyPrice: "€6.58",
-      yearlyNote: "€79 billed annually",
-      yearSave: "34%",
-      description: "Everything Pro + team features",
-      badge: null,
-      cardClass: "border-purple-200 dark:border-purple-800 bg-white dark:bg-gray-900",
-      btnClass: "bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200/40 dark:shadow-purple-900/40",
-      features: ["All 20+ PDF tools", "Unlimited tasks", "1 GB max file size", "No watermark", "OCR & conversions", "Priority processing", "5 team seats", "API access"],
-    },
-  ] as const;
+  const cellStyle = (val: boolean | string) => {
+    if (typeof val === "boolean") return val
+      ? <Check size={15} strokeWidth={2.5} style={{ color: "var(--red)", margin: "0 auto" }} />
+      : <Minus size={15} strokeWidth={2} style={{ color: "var(--gray-200)", margin: "0 auto" }} />;
+    return <span style={{ fontSize: 13, color: "var(--black)" }}>{val}</span>;
+  };
 
   return (
-    <section id="pricing" className="py-20 px-4 bg-gray-50 dark:bg-[#0A0A0A] border-y border-gray-100 dark:border-gray-900">
-      <div className="max-w-6xl mx-auto">
+    <section id="pricing" style={{ borderTop: "var(--border)", borderBottom: "var(--border)" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "80px 24px" }}>
+
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-900 text-indigo-600 dark:text-indigo-400 text-xs font-semibold px-4 py-2 rounded-full mb-5">
-            ✦ Simple, transparent pricing
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 8 }}>
+            PRICING
+          </p>
+          <h2 style={{ fontSize: 32, fontWeight: 700, color: "var(--black)", marginBottom: 12 }}>
             Start free, upgrade when ready
           </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-base max-w-md mx-auto">
-            No hidden fees. Cancel anytime. All plans include a 7-day free trial.
+          <p style={{ fontSize: 15, color: "var(--gray-600)" }}>
+            All plans include a 7-day free trial. No hidden fees.
           </p>
         </div>
 
         {/* Billing toggle */}
-        <div className="flex flex-col items-center gap-4 mb-10">
-          <div className="inline-flex items-center bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-1 gap-1 shadow-sm">
-            <button
-              onClick={() => setBilling("monthly")}
-              className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
-                billing === "monthly"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBilling("yearly")}
-              className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-                billing === "yearly"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-              }`}
-            >
-              Yearly
-              <span className="bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-full">
-                Save 37%
-              </span>
-            </button>
-          </div>
-
-          {/* Promo code */}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Promo code"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-              className="px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 w-36 placeholder-gray-400"
-            />
-            <button
-              onClick={() => { if (promoCode) { setPromoApplied(promoCode); setError(""); } }}
-              className="px-4 py-2 text-sm bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-semibold rounded-xl hover:opacity-90 transition"
-            >
-              Apply
-            </button>
-            {promoApplied && (
-              <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-                </svg>
-                {promoApplied}
-              </span>
-            )}
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 px-4 py-2 rounded-xl">
-              {error}
-            </p>
-          )}
-        </div>
-
-        {/* Pricing cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-16">
-          {plans.map((plan) => {
-            const isCurrent = isCurrentPlan(plan.key);
-            const price = billing === "yearly" && plan.key !== "free" ? plan.yearlyPrice : plan.monthlyPrice;
-            const isPro = plan.key === "pro";
-
-            return (
-              <div
-                key={plan.key}
-                className={`relative rounded-2xl border-2 ${plan.cardClass} p-6 flex flex-col ${isPro ? "shadow-xl shadow-violet-100/50 dark:shadow-violet-900/30 scale-[1.02] z-10" : ""}`}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+          <div style={{ display: "inline-flex", border: "var(--border)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+            {(["monthly", "yearly"] as const).map((b) => (
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                style={{
+                  height: 36,
+                  padding: "0 20px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  border: "none",
+                  background: billing === b ? "var(--red)" : "var(--white)",
+                  color: billing === b ? "#fff" : "var(--gray-600)",
+                  transition: "background var(--transition), color var(--transition)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
               >
-                {isPro && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
-                      ✦ Most Popular
-                    </span>
-                  </div>
+                {b === "monthly" ? "Monthly" : "Yearly"}
+                {b === "yearly" && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700,
+                    background: billing === "yearly" ? "rgba(255,255,255,0.3)" : "var(--red)",
+                    color: "#fff",
+                    padding: "2px 5px", borderRadius: 3,
+                    letterSpacing: "0.05em",
+                  }}>
+                    SAVE 35%
+                  </span>
                 )}
-
-                <div className="mb-5">
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base mb-1">{plan.name}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{plan.description}</p>
-                  <div className="flex items-end gap-1">
-                    <span className="text-3xl font-black text-gray-900 dark:text-white">{price}</span>
-                    <span className="text-gray-400 text-sm mb-1">{plan.key === "free" ? "/forever" : "/mo"}</span>
-                  </div>
-                  {billing === "yearly" && plan.key !== "free" && "yearlyNote" in plan && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                      {plan.yearlyNote} · Save {plan.yearSave}
-                    </p>
-                  )}
-                </div>
-
-                <div className="mb-5">
-                  {isCurrent ? (
-                    <div className="w-full py-2.5 rounded-xl font-semibold text-sm bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-center border border-emerald-200 dark:border-emerald-800 flex items-center justify-center gap-1.5">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-                      </svg>
-                      Current plan
-                    </div>
-                  ) : plan.key === "free" ? (
-                    <button
-                      onClick={() => document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" })}
-                      className={`w-full py-2.5 rounded-xl font-semibold text-sm transition ${plan.btnClass}`}
-                    >
-                      Get Started Free
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleCheckout(plan.key)}
-                      disabled={loading === plan.key}
-                      className={`w-full py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-60 ${plan.btnClass}`}
-                    >
-                      {loading === plan.key ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                          </svg>
-                          Loading…
-                        </span>
-                      ) : (!currentPlan || currentPlan === "free")
-                        ? `Try ${plan.name} free — 7 days`
-                        : `Get ${plan.name}${billing === "yearly" ? ` (save ${plan.yearSave})` : ""}`}
-                    </button>
-                  )}
-                </div>
-
-                <ul className="space-y-2 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                      <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Feature comparison table */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden mb-14">
-          <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-            <h3 className="font-bold text-gray-900 dark:text-gray-100">Feature comparison</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400">Feature</th>
-                  {["Free", "Starter", "Pro", "Team"].map((h) => (
-                    <th key={h} className={`px-4 py-3 text-xs font-bold text-center ${h === "Pro" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-700 dark:text-gray-300"}`}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON_FEATURES.map((row, i) => (
-                  <tr key={row.label} className={`border-b border-gray-50 dark:border-gray-800/50 ${i % 2 === 0 ? "bg-gray-50/30 dark:bg-gray-800/20" : ""}`}>
-                    <td className="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{row.label}</td>
-                    {([row.free, row.starter, row.pro, row.team] as (boolean | string)[]).map((val, j) => (
-                      <td key={j} className="px-4 py-3 text-center">
-                        {typeof val === "boolean" ? (
-                          val
-                            ? <svg className="w-4 h-4 text-emerald-500 mx-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            : <svg className="w-4 h-4 text-gray-300 dark:text-gray-700 mx-auto" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        ) : (
-                          <span className={`text-xs font-medium ${j === 2 ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-gray-600 dark:text-gray-400"}`}>{val}</span>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* FAQ */}
-        <div className="max-w-2xl mx-auto">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-6">Frequently asked questions</h3>
-          <div className="space-y-3">
-            {FAQ.map((item, i) => (
-              <div key={i} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-left"
-                >
-                  <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{item.q}</span>
-                  <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${openFaq === i ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {openFaq === i && (
-                  <div className="px-5 pb-4 text-sm text-gray-500 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-3 animate-fade-up">
-                    {item.a}
-                  </div>
-                )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Trust footer */}
-        <div className="text-center mt-10">
-          <p className="text-xs text-gray-400 flex items-center justify-center gap-3 flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Secure payment by Stripe
-            </span>
-            <span>·</span>
-            <span>Cancel anytime</span>
-            <span>·</span>
-            <span>30-day money-back guarantee</span>
-            <span>·</span>
-            <span>No hidden fees</span>
-          </p>
+        {/* Plans grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 64 }}>
+          {PLANS.map((p) => (
+            <div
+              key={p.key}
+              style={{
+                border: p.highlight ? "2px solid var(--black)" : "var(--border)",
+                borderRadius: "var(--radius)",
+                padding: 24,
+                background: "var(--white)",
+                position: "relative",
+              }}
+            >
+              {/* Plan name */}
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 4 }}>
+                {p.name}
+              </p>
+              <p style={{ fontSize: 13, color: "var(--gray-600)", marginBottom: 20 }}>{p.desc}</p>
+
+              {/* Price */}
+              <div style={{ marginBottom: 20 }}>
+                <span style={{ fontSize: 40, fontWeight: 700, color: "var(--black)", letterSpacing: "-0.03em" }}>
+                  {billing === "yearly" ? p.yr : p.mo}
+                </span>
+                <span style={{ fontSize: 14, color: "var(--gray-400)", marginLeft: 4 }}>/mo</span>
+                {"yrNote" in p && billing === "yearly" && (
+                  <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{p.yrNote}</p>
+                )}
+              </div>
+
+              {/* CTA */}
+              {p.key === "free" ? (
+                <button
+                  onClick={() => document.getElementById("tools")?.scrollIntoView({ behavior: "smooth" })}
+                  disabled={isCurrent("free")}
+                  style={{
+                    width: "100%", height: 40, borderRadius: "var(--radius)", fontSize: 14, fontWeight: 600,
+                    cursor: isCurrent("free") ? "default" : "pointer",
+                    border: "var(--border)", background: "transparent",
+                    color: isCurrent("free") ? "var(--gray-400)" : "var(--black)",
+                    marginBottom: 20,
+                  }}
+                >
+                  {isCurrent("free") ? "Current plan" : p.cta}
+                </button>
+              ) : (
+                <button
+                  onClick={() => !isCurrent(p.key) && handleCheckout(p.key as "starter" | "pro" | "team")}
+                  disabled={loading === p.key || isCurrent(p.key)}
+                  style={{
+                    width: "100%", height: 40, borderRadius: "var(--radius)", fontSize: 14, fontWeight: 600,
+                    cursor: (loading === p.key || isCurrent(p.key)) ? "default" : "pointer",
+                    border: "none",
+                    background: isCurrent(p.key) ? "var(--gray-100)" : p.style === "red" ? "var(--red)" : "var(--black)",
+                    color: isCurrent(p.key) ? "var(--gray-400)" : "#fff",
+                    marginBottom: 20,
+                    opacity: loading === p.key ? 0.7 : 1,
+                  }}
+                >
+                  {loading === p.key ? "Loading…" : isCurrent(p.key) ? "Current plan" : p.cta}
+                </button>
+              )}
+
+              {/* Features */}
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                {p.feats.map((f) => (
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--gray-600)" }}>
+                    <Check size={13} strokeWidth={2.5} style={{ color: "var(--red)", flexShrink: 0 }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
+
+        {/* Promo code */}
+        <div style={{ maxWidth: 400, margin: "0 auto 64px", display: "flex", gap: 8 }}>
+          <input
+            type="text"
+            placeholder="Promo code"
+            value={promoCode}
+            onChange={e => setPromoCode(e.target.value.toUpperCase())}
+            style={{ flex: 1, height: 36, padding: "0 12px", fontSize: 13, border: "var(--border)", borderRadius: "var(--radius)", background: "var(--white)", color: "var(--black)", outline: "none" }}
+          />
+          <button
+            onClick={() => { if (promoCode) { setPromoApplied(promoCode); } }}
+            style={{ height: 36, padding: "0 16px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: "var(--radius)", background: "var(--black)", color: "#fff", cursor: "pointer" }}
+          >
+            Apply
+          </button>
+        </div>
+        {promoApplied && (
+          <p style={{ textAlign: "center", fontSize: 13, color: "var(--red)", marginBottom: 32 }}>
+            Promo code <strong>{promoApplied}</strong> applied
+          </p>
+        )}
+        {error && <p style={{ textAlign: "center", fontSize: 13, color: "var(--red)", marginBottom: 24 }}>{error}</p>}
+
+        {/* Comparison table */}
+        <div style={{ border: "var(--border)", borderRadius: "var(--radius)", overflow: "hidden", marginBottom: 64 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: "var(--border)", background: "var(--gray-50)" }}>
+                <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: "var(--black)", fontSize: 12 }}>Feature</th>
+                {["Free", "Starter", "Pro", "Team"].map(n => (
+                  <th key={n} style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600, color: n === "Pro" ? "var(--red)" : "var(--black)", fontSize: 12 }}>{n}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {COMPARE.map((row, i) => (
+                <tr key={row.label} style={{ borderBottom: i < COMPARE.length - 1 ? "var(--border)" : "none", background: i % 2 === 0 ? "var(--white)" : "var(--gray-50)" }}>
+                  <td style={{ padding: "10px 16px", color: "var(--gray-600)" }}>{row.label}</td>
+                  {([row.free, row.starter, row.pro, row.team] as Array<boolean|string>).map((v, j) => (
+                    <td key={j} style={{ padding: "10px 16px", textAlign: "center" }}>{cellStyle(v)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* FAQ */}
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: "var(--black)", marginBottom: 24 }}>
+            Frequently asked questions
+          </h3>
+          {FAQ.map((item, i) => (
+            <div key={i} style={{ borderBottom: "var(--border)" }}>
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                style={{
+                  width: "100%", textAlign: "left", padding: "16px 0",
+                  display: "flex", justifyContent: "space-between", alignItems: "center",
+                  background: "none", border: "none", cursor: "pointer",
+                  fontSize: 14, fontWeight: 500, color: "var(--black)",
+                }}
+              >
+                {item.q}
+                <span style={{ color: "var(--gray-400)", fontSize: 18, lineHeight: 1, flexShrink: 0, marginLeft: 16 }}>
+                  {openFaq === i ? "−" : "+"}
+                </span>
+              </button>
+              {openFaq === i && (
+                <p style={{ fontSize: 14, color: "var(--gray-600)", paddingBottom: 16, lineHeight: 1.6 }}>
+                  {item.a}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+
       </div>
     </section>
   );

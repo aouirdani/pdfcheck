@@ -12,16 +12,15 @@ interface Props {
 function useDarkMode() {
   const [dark, setDark] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("theme") === "dark" ||
-      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    return document.documentElement.getAttribute("data-theme") === "dark";
   });
 
   useEffect(() => {
     if (dark) {
-      document.documentElement.classList.add("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
       localStorage.setItem("theme", "dark");
     } else {
-      document.documentElement.classList.remove("dark");
+      document.documentElement.removeAttribute("data-theme");
       localStorage.setItem("theme", "light");
     }
   }, [dark]);
@@ -29,10 +28,65 @@ function useDarkMode() {
   return [dark, setDark] as const;
 }
 
-const planBadgeStyle: Record<string, string> = {
-  team: "bg-gradient-to-r from-violet-500 to-purple-600",
-  premium: "bg-gradient-to-r from-amber-400 to-orange-500",
-  starter: "bg-gradient-to-r from-blue-400 to-indigo-500",
+const S = {
+  header: {
+    position: "sticky" as const,
+    top: 0,
+    zIndex: 50,
+    height: 56,
+    background: "var(--white)",
+    borderBottom: "var(--border)",
+    display: "flex",
+    alignItems: "center",
+  },
+  inner: {
+    maxWidth: 1200,
+    margin: "0 auto",
+    padding: "0 24px",
+    width: "100%",
+    display: "flex",
+    alignItems: "center",
+    gap: 32,
+  },
+  logo: {
+    display: "flex",
+    alignItems: "center",
+    textDecoration: "none",
+    flexShrink: 0,
+  },
+  navLink: {
+    fontSize: 14,
+    color: "var(--gray-600)",
+    textDecoration: "none",
+    padding: "4px 0",
+    transition: "color var(--transition)",
+  },
+  btn: (variant: "red" | "ghost") => ({
+    height: 34,
+    padding: "0 16px",
+    borderRadius: "var(--radius)",
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: "pointer",
+    transition: "background var(--transition), border-color var(--transition)",
+    border: variant === "ghost" ? "var(--border)" : "none",
+    background: variant === "red" ? "var(--red)" : "transparent",
+    color: variant === "red" ? "#fff" : "var(--black)",
+  }),
+  iconBtn: {
+    width: 34,
+    height: 34,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    border: "var(--border)",
+    borderRadius: "var(--radius)",
+    background: "transparent",
+    color: "var(--gray-600)",
+    cursor: "pointer",
+    transition: "border-color var(--transition), color var(--transition)",
+    flexShrink: 0,
+  },
 };
 
 export function Header({ onSearch, onHistory, onBilling }: Props) {
@@ -43,172 +97,205 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
   const [showAuth, setShowAuth] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Listen for global "open-auth" dispatched by App
   useEffect(() => {
     const handler = () => setShowAuth(true);
     window.addEventListener("open-auth", handler);
     return () => window.removeEventListener("open-auth", handler);
   }, []);
 
+  // Lock scroll when mobile menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchVal(e.target.value);
     onSearch(e.target.value);
   };
 
-  const planLabel = plan && plan !== "free" ? plan.charAt(0).toUpperCase() + plan.slice(1) : null;
-  const planStyle = plan ? planBadgeStyle[plan] ?? "bg-indigo-600" : "bg-indigo-600";
+  const planLabel = plan && plan !== "free" ? plan.toUpperCase() : null;
 
   return (
     <>
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "glass border-b border-gray-200/50 dark:border-gray-800/50 shadow-sm"
-          : "bg-transparent"
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center h-16 gap-4">
+      <header style={S.header}>
+        <div style={S.inner}>
+          {/* Logo */}
+          <a href="/" style={S.logo}>
+            <span style={{ fontSize: 17, fontWeight: 700, color: "var(--black)", letterSpacing: "-0.02em" }}>
+              <span style={{ color: "var(--black)" }}>PDF</span>
+              <span style={{ color: "var(--red)" }}>check</span>
+            </span>
+          </a>
 
-            {/* Logo */}
-            <a href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200/50 dark:shadow-indigo-900/50 group-hover:scale-105 transition-transform">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                <span className="text-indigo-600 dark:text-indigo-400">PDF</span>check
-              </span>
-            </a>
-
-            {/* Search */}
-            <div className="flex-1 max-w-sm hidden sm:block">
-              <div className="relative">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search tools…"
-                  value={searchVal}
-                  onChange={handleSearch}
-                  className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 focus:bg-white dark:focus:bg-gray-750 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1 text-sm font-medium ml-auto">
-              {[
-                { label: "Tools", href: "#tools" },
-                { label: "Features", href: "#features" },
-                { label: "Pricing", href: "#pricing" },
-              ].map(({ label, href }) => (
-                <a
-                  key={label}
-                  href={href}
-                  className="px-3 py-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all"
-                >
-                  {label}
-                </a>
-              ))}
-              {user && (
-                <a
-                  href="/dashboard"
-                  className="px-3 py-1.5 rounded-xl text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all flex items-center gap-1.5"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-                    <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
-                  </svg>
-                  Dashboard
-                </a>
-              )}
-            </nav>
-
-            {/* Right actions */}
-            <div className="flex items-center gap-2">
-              {/* Dark mode toggle */}
-              <button
-                onClick={() => setDark(!dark)}
-                className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all"
-                title="Toggle dark mode"
+          {/* Desktop Nav */}
+          <nav style={{ display: "flex", alignItems: "center", gap: 24 }} className="hidden md:flex">
+            {[
+              { label: "Tools", href: "#tools" },
+              { label: "Pricing", href: "#pricing" },
+            ].map(({ label, href }) => (
+              <a key={label} href={href} style={S.navLink}
+                onMouseEnter={e => (e.currentTarget.style.color = "var(--black)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "var(--gray-600)")}
               >
-                {dark ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
-              </button>
+                {label}
+              </a>
+            ))}
+            {user && (
+              <a href="/dashboard" style={S.navLink}
+                onMouseEnter={e => (e.currentTarget.style.color = "var(--black)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "var(--gray-600)")}
+              >
+                Dashboard
+              </a>
+            )}
+          </nav>
 
+          {/* Search */}
+          <div style={{ flex: 1 }} className="hidden md:block">
+            <div style={{ position: "relative", maxWidth: 320 }}>
+              <svg style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search tools…"
+                value={searchVal}
+                onChange={handleSearch}
+                style={{
+                  width: "100%",
+                  height: 34,
+                  paddingLeft: 32,
+                  paddingRight: 12,
+                  fontSize: 14,
+                  border: "var(--border)",
+                  borderRadius: "var(--radius)",
+                  background: "var(--gray-50)",
+                  color: "var(--black)",
+                  outline: "none",
+                  transition: "border-color var(--transition)",
+                }}
+                onFocus={e => (e.target.style.borderColor = "var(--black)")}
+                onBlur={e => (e.target.style.borderColor = "var(--gray-200)")}
+              />
+            </div>
+          </div>
+
+          {/* Right actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }} className="flex-shrink-0">
+            {/* Dark mode toggle */}
+            <button
+              onClick={() => setDark(!dark)}
+              style={S.iconBtn}
+              title={dark ? "Light mode" : "Dark mode"}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--black)"; (e.currentTarget as HTMLElement).style.color = "var(--black)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-200)"; (e.currentTarget as HTMLElement).style.color = "var(--gray-600)"; }}
+            >
+              {dark ? (
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
+
+            <div className="hidden sm:flex items-center gap-2">
               {user ? (
-                <div className="relative hidden sm:block">
+                <div style={{ position: "relative" }}>
                   <button
-                    onClick={() => setDropdownOpen((o) => !o)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all"
+                    onClick={() => setDropdownOpen(o => !o)}
+                    style={{
+                      height: 34,
+                      padding: "0 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      border: "var(--border)",
+                      borderRadius: "var(--radius)",
+                      background: "transparent",
+                      cursor: "pointer",
+                      fontSize: 14,
+                      color: "var(--black)",
+                    }}
                   >
-                    <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    <span style={{
+                      width: 22, height: 22, borderRadius: 4,
+                      background: "var(--red)", color: "#fff",
+                      fontSize: 11, fontWeight: 700,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
                       {user.email?.[0]?.toUpperCase() ?? "U"}
-                    </div>
+                    </span>
                     {planLabel && (
-                      <span className={`${planStyle} text-white text-[10px] font-bold px-2 py-0.5 rounded-full`}>
-                        {planLabel.toUpperCase()}
+                      <span style={{
+                        fontSize: 10, fontWeight: 700,
+                        background: "var(--red)", color: "#fff",
+                        padding: "2px 6px", borderRadius: 3,
+                        letterSpacing: "0.05em",
+                      }}>
+                        {planLabel}
                       </span>
                     )}
-                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {dropdownOpen && (
                     <>
-                      <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
-                      <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl dark:shadow-black/40 z-50 py-1.5 text-sm animate-scale-in">
-                        <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
-                          <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{user.email}</p>
-                          <p className="text-xs text-gray-400 capitalize mt-0.5">{plan ?? "free"} plan</p>
+                      <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setDropdownOpen(false)} />
+                      <div style={{
+                        position: "absolute", right: 0, top: "calc(100% + 6px)",
+                        width: 220, background: "var(--white)",
+                        border: "var(--border)", borderRadius: "var(--radius)",
+                        boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                        zIndex: 50, overflow: "hidden",
+                      }}>
+                        <div style={{ padding: "12px 16px", borderBottom: "var(--border)" }}>
+                          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--black)" }}>{user.email}</p>
+                          <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2, textTransform: "capitalize" }}>{plan ?? "free"} plan</p>
                         </div>
-                        <a href="/dashboard" className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5 text-gray-700 dark:text-gray-300">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-                            <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
-                          </svg>
-                          Dashboard
-                        </a>
+                        {[
+                          { label: "Dashboard", href: "/dashboard" },
+                        ].map(({ label, href }) => (
+                          <a key={label} href={href} style={{ display: "block", padding: "10px 16px", fontSize: 14, color: "var(--black)", textDecoration: "none" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "var(--gray-50)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
+                            {label}
+                          </a>
+                        ))}
                         {onHistory && (
-                          <button onClick={() => { setDropdownOpen(false); onHistory(); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5 text-gray-700 dark:text-gray-300">
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-                            </svg>
+                          <button onClick={() => { setDropdownOpen(false); onHistory(); }} style={{ width: "100%", textAlign: "left", padding: "10px 16px", fontSize: 14, color: "var(--black)", background: "none", border: "none", cursor: "pointer" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "var(--gray-50)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
                             History
                           </button>
                         )}
                         {onBilling && (
-                          <button onClick={() => { setDropdownOpen(false); onBilling(); }} className="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2.5 text-gray-700 dark:text-gray-300">
-                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
+                          <button onClick={() => { setDropdownOpen(false); onBilling(); }} style={{ width: "100%", textAlign: "left", padding: "10px 16px", fontSize: 14, color: "var(--black)", background: "none", border: "none", cursor: "pointer" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "var(--gray-50)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
                             Billing
                           </button>
                         )}
-                        <div className="border-t border-gray-100 dark:border-gray-800 my-1" />
-                        <button onClick={() => { signOut().catch(() => {}); setDropdownOpen(false); }} className="w-full text-left px-4 py-2.5 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2.5 text-red-500">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Sign Out
-                        </button>
+                        <div style={{ borderTop: "var(--border)" }}>
+                          <button onClick={() => { signOut().catch(() => {}); setDropdownOpen(false); }} style={{ width: "100%", textAlign: "left", padding: "10px 16px", fontSize: 14, color: "var(--red)", background: "none", border: "none", cursor: "pointer" }}
+                            onMouseEnter={e => (e.currentTarget.style.background = "var(--red-subtle)")}
+                            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                          >
+                            Sign out
+                          </button>
+                        </div>
                       </div>
                     </>
                   )}
@@ -217,50 +304,53 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
                 <button
                   data-open-auth
                   onClick={() => setShowAuth(true)}
-                  className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-1.5 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-all"
+                  style={S.btn("ghost")}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = "var(--black)")}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = "var(--gray-200)")}
                 >
                   Sign in
                 </button>
               )}
-
-              {/* Upgrade CTA */}
-              {(!plan || plan === "free") && (
-                <button
-                  onClick={() => {
-                    const el = document.getElementById("pricing");
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-md shadow-indigo-200/50 dark:shadow-indigo-900/50 transition-all hover:-translate-y-0.5"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                  Upgrade
-                </button>
-              )}
-
-              {/* Mobile menu button */}
               <button
-                className="md:hidden w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300"
-                onClick={() => setMenuOpen(!menuOpen)}
+                onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
+                style={S.btn("red")}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--red-hover)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--red)")}
               >
-                {menuOpen ? (
-                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
+                Get started
               </button>
             </div>
-          </div>
 
-          {/* Mobile search */}
-          <div className="sm:hidden pb-3">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={S.iconBtn}
+              className="md:hidden"
+            >
+              {menuOpen ? (
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div style={{
+            position: "fixed", top: 56, left: 0, right: 0, bottom: 0,
+            background: "var(--white)", borderTop: "var(--border)",
+            padding: 24, zIndex: 49,
+            display: "flex", flexDirection: "column", gap: 2,
+          }}>
+            {/* Mobile search */}
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <svg style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: "var(--gray-400)" }} width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
@@ -268,50 +358,33 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
                 placeholder="Search tools…"
                 value={searchVal}
                 onChange={handleSearch}
-                className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                style={{ width: "100%", height: 40, paddingLeft: 34, paddingRight: 12, fontSize: 14, border: "var(--border)", borderRadius: "var(--radius)", background: "var(--gray-50)", color: "var(--black)", outline: "none" }}
               />
             </div>
-          </div>
-        </div>
-
-        {/* Mobile slide-down menu */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 space-y-1 animate-fade-up">
-            {["Tools", "Features", "Pricing"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                {item}
+            {[
+              { label: "Tools", href: "#tools" },
+              { label: "Pricing", href: "#pricing" },
+            ].map(({ label, href }) => (
+              <a key={label} href={href} onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "12px 0", fontSize: 16, fontWeight: 500, color: "var(--black)", borderBottom: "var(--border)", textDecoration: "none" }}>
+                {label}
               </a>
             ))}
             {user ? (
               <>
-                <a href="/dashboard" onClick={() => setMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50">
+                <a href="/dashboard" onClick={() => setMenuOpen(false)} style={{ display: "block", padding: "12px 0", fontSize: 16, fontWeight: 500, color: "var(--black)", borderBottom: "var(--border)", textDecoration: "none" }}>
                   Dashboard
                 </a>
-                {onHistory && (
-                  <button onClick={() => { onHistory(); setMenuOpen(false); }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-                    History
-                  </button>
-                )}
-                <button onClick={() => { signOut().catch(() => {}); setMenuOpen(false); }}
-                  className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30">
-                  Sign Out
+                <button onClick={() => { signOut().catch(() => {}); setMenuOpen(false); }} style={{ padding: "12px 0", fontSize: 16, fontWeight: 500, color: "var(--red)", background: "none", border: "none", textAlign: "left", cursor: "pointer", borderBottom: "var(--border)" }}>
+                  Sign out
                 </button>
               </>
             ) : (
-              <button data-open-auth onClick={() => { setShowAuth(true); setMenuOpen(false); }}
-                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50">
-                Sign In
+              <button data-open-auth onClick={() => { setShowAuth(true); setMenuOpen(false); }} style={{ padding: "12px 0", fontSize: 16, fontWeight: 500, color: "var(--black)", background: "none", border: "none", textAlign: "left", cursor: "pointer", borderBottom: "var(--border)" }}>
+                Sign in
               </button>
             )}
-            <button
-              onClick={() => setDark(!dark)}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
-            >
-              {dark ? "☀️ Light Mode" : "🌙 Dark Mode"}
+            <button onClick={() => setDark(!dark)} style={{ padding: "12px 0", fontSize: 14, color: "var(--gray-600)", background: "none", border: "none", textAlign: "left", cursor: "pointer", marginTop: 8 }}>
+              {dark ? "Switch to light mode" : "Switch to dark mode"}
             </button>
           </div>
         )}

@@ -54,60 +54,93 @@ export function AuthModal({ isOpen, onClose }: Props) {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "11px 14px",
+    border: "var(--border)",
+    borderRadius: "var(--radius)",
+    background: "var(--white)",
+    color: "var(--black)",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "var(--font)",
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-950 rounded-3xl shadow-2xl dark:shadow-black/60 w-full max-w-md overflow-hidden animate-scale-in border border-gray-100 dark:border-gray-800">
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, background: "rgba(0,0,0,0.5)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) { resetForm(); onClose(); } }}
+    >
+      <div style={{
+        background: "var(--white)",
+        borderRadius: "var(--radius)",
+        border: "var(--border)",
+        width: "100%",
+        maxWidth: 400,
+        overflow: "hidden",
+      }}>
         {/* Header */}
-        <div className="px-6 pt-6 pb-5 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              </div>
-              <h2 className="font-bold text-gray-900 dark:text-gray-100 text-lg">
-                {tab === "signin" ? "Welcome back" : "Create account"}
-              </h2>
-            </div>
-            <button onClick={() => { resetForm(); onClose(); }}
-              className="w-8 h-8 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center transition text-gray-500">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div style={{ padding: "20px 24px 16px", borderBottom: "var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ fontSize: 16, fontWeight: 700, color: "var(--black)" }}>
+              {tab === "signin" ? "Welcome back" : "Create account"}
+            </p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>
+              {tab === "signin" ? "Sign in to your PDFcheck account" : "Start using PDF tools for free"}
+            </p>
           </div>
-          <p className="text-xs text-gray-400 ml-[42px]">
-            {tab === "signin" ? "Sign in to your PDFcheck account" : "Start using PDF tools for free"}
-          </p>
+          <button
+            onClick={() => { resetForm(); onClose(); }}
+            style={{ width: 32, height: 32, border: "var(--border)", borderRadius: "var(--radius)", background: "var(--white)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--gray-400)" }}
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Tabs */}
-          <div className="flex bg-gray-100 dark:bg-gray-900 rounded-2xl p-1 gap-1">
+          <div style={{ display: "flex", borderBottom: "var(--border)" }}>
             {(["signin", "signup"] as const).map((t) => (
-              <button key={t} onClick={() => switchTab(t)}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  tab === t
-                    ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
+              <button
+                key={t}
+                onClick={() => switchTab(t)}
+                style={{
+                  flex: 1, padding: "10px 0", background: "none", border: "none",
+                  borderBottom: tab === t ? "2px solid var(--black)" : "2px solid transparent",
+                  fontSize: 14, fontWeight: tab === t ? 600 : 400,
+                  color: tab === t ? "var(--black)" : "var(--gray-400)",
+                  cursor: "pointer", marginBottom: -1,
+                  transition: "color var(--transition)",
+                }}
               >
-                {t === "signin" ? "Sign In" : "Sign Up"}
+                {t === "signin" ? "Sign in" : "Sign up"}
               </button>
             ))}
           </div>
 
           {/* Google */}
-          <button onClick={handleGoogle} disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-2.5 border border-gray-200 dark:border-gray-700 rounded-2xl py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition disabled:opacity-60">
+          <button
+            onClick={handleGoogle}
+            disabled={googleLoading}
+            style={{
+              width: "100%", padding: "10px 16px", border: "var(--border)",
+              borderRadius: "var(--radius)", background: "var(--white)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+              fontSize: 14, color: "var(--black)", cursor: "pointer",
+              opacity: googleLoading ? 0.6 : 1,
+              fontFamily: "var(--font)", fontWeight: 500,
+            }}
+          >
             {googleLoading ? (
-              <svg className="w-4 h-4 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" style={{ animation: "spin 1s linear infinite" }}>
+                <circle cx="12" cy="12" r="10" stroke="var(--gray-200)" strokeWidth="4"/>
+                <path fill="var(--gray-400)" d="M4 12a8 8 0 018-8v8z"/>
               </svg>
             ) : (
-              <svg className="w-4 h-4" viewBox="0 0 24 24">
+              <svg width="16" height="16" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -117,42 +150,65 @@ export function AuthModal({ isOpen, onClose }: Props) {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-            <span className="text-xs text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: "var(--gray-200)" }} />
+            <span style={{ fontSize: 12, color: "var(--gray-400)" }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "var(--gray-200)" }} />
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3">
+          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {tab === "signup" && (
-              <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition" />
+              <input
+                type="text" placeholder="Full name" value={name}
+                onChange={(e) => setName(e.target.value)}
+                style={inputStyle}
+              />
             )}
-            <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} required
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition" />
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400 transition" />
+            <input
+              type="email" placeholder="Email address" value={email}
+              onChange={(e) => setEmail(e.target.value)} required
+              style={inputStyle}
+            />
+            <input
+              type="password" placeholder="Password" value={password}
+              onChange={(e) => setPassword(e.target.value)} required minLength={6}
+              style={inputStyle}
+            />
 
             {error && (
-              <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs px-3 py-2.5 rounded-xl">
-                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div style={{
+                padding: "10px 14px", border: "1px solid var(--red)",
+                borderRadius: "var(--radius)", background: "var(--red-subtle)",
+                fontSize: 13, color: "var(--red)",
+              }}>
                 {error}
               </div>
             )}
 
-            <button type="submit" disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition shadow-md shadow-indigo-200/40 dark:shadow-indigo-900/40 text-sm">
-              {loading ? "Please wait…" : tab === "signin" ? "Sign In" : "Create Account"}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", padding: "12px 24px",
+                background: "var(--black)", color: "var(--white)",
+                border: "none", borderRadius: "var(--radius)",
+                fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer",
+                opacity: loading ? 0.6 : 1, fontFamily: "var(--font)",
+                marginTop: 4,
+              }}
+            >
+              {loading ? "Please wait…" : tab === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
 
           {tab === "signin" && (
-            <p className="text-center text-xs text-gray-400">
+            <p style={{ textAlign: "center", fontSize: 13, color: "var(--gray-400)" }}>
               Don't have an account?{" "}
-              <button onClick={() => switchTab("signup")} className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">
+              <button
+                onClick={() => switchTab("signup")}
+                style={{ color: "var(--red)", fontWeight: 600, background: "none", border: "none", cursor: "pointer", fontSize: 13, fontFamily: "var(--font)" }}
+              >
                 Sign up free
               </button>
             </p>
