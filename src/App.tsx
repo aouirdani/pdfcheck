@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { ToolCard } from "./components/ToolCard";
-import { ToolModal } from "./components/ToolModal";
 import { Features } from "./components/Features";
 import { Pricing } from "./components/Pricing";
 import { Footer } from "./components/Footer";
 import { ToastContainer } from "./components/Toast";
-import { HistoryDrawer } from "./components/HistoryDrawer";
-import { BillingModal } from "./components/BillingModal";
-import { UpgradeModal } from "./components/UpgradeModal";
-import { BatchModal } from "./components/BatchModal";
 import { tools, categories, Tool } from "./data/tools";
+
+// Heavy modals — lazy loaded so pdf-lib/jszip never block initial paint
+const ToolModal     = lazy(() => import("./components/ToolModal").then(m => ({ default: m.ToolModal })));
+const BatchModal    = lazy(() => import("./components/BatchModal").then(m => ({ default: m.BatchModal })));
+const HistoryDrawer = lazy(() => import("./components/HistoryDrawer").then(m => ({ default: m.HistoryDrawer })));
+const BillingModal  = lazy(() => import("./components/BillingModal").then(m => ({ default: m.BillingModal })));
+const UpgradeModal  = lazy(() => import("./components/UpgradeModal").then(m => ({ default: m.UpgradeModal })));
+
 
 export function App() {
   const [activeCategory, setActiveCategory] = useState("All");
@@ -217,20 +220,28 @@ export function App() {
       <Pricing />
       <Footer />
 
-      {/* Modals */}
-      {selectedTool && (
-        <ToolModal tool={selectedTool} onClose={() => setSelectedTool(null)} />
-      )}
-      {batchTool && (
-        <BatchModal tool={batchTool} onClose={() => setBatchTool(null)} />
-      )}
-      <HistoryDrawer isOpen={showHistory} onClose={() => setShowHistory(false)} />
-      <BillingModal isOpen={showBilling} onClose={() => setShowBilling(false)} />
-      <UpgradeModal
-        isOpen={showUpgrade}
-        onClose={() => { setShowUpgrade(false); setUpgradeReason(undefined); }}
-        reason={upgradeReason}
-      />
+      {/* Modals — wrapped in Suspense; pdf-lib/jszip load only on first use */}
+      <Suspense fallback={null}>
+        {selectedTool && (
+          <ToolModal tool={selectedTool} onClose={() => setSelectedTool(null)} />
+        )}
+        {batchTool && (
+          <BatchModal tool={batchTool} onClose={() => setBatchTool(null)} />
+        )}
+        {showHistory && (
+          <HistoryDrawer isOpen={showHistory} onClose={() => setShowHistory(false)} />
+        )}
+        {showBilling && (
+          <BillingModal isOpen={showBilling} onClose={() => setShowBilling(false)} />
+        )}
+        {showUpgrade && (
+          <UpgradeModal
+            isOpen={showUpgrade}
+            onClose={() => { setShowUpgrade(false); setUpgradeReason(undefined); }}
+            reason={upgradeReason}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }
