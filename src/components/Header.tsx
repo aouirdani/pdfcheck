@@ -9,24 +9,6 @@ interface Props {
   onBilling?: () => void;
 }
 
-function useDarkMode() {
-  const [dark, setDark] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return document.documentElement.getAttribute("data-theme") === "dark";
-  });
-
-  useEffect(() => {
-    if (dark) {
-      document.documentElement.setAttribute("data-theme", "dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.removeAttribute("data-theme");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
-
-  return [dark, setDark] as const;
-}
 
 const S = {
   header: {
@@ -92,7 +74,6 @@ const S = {
 export function Header({ onSearch, onHistory, onBilling }: Props) {
   const { user, signOut } = useAuth();
   const { plan } = usePlan();
-  const [dark, setDark] = useDarkMode();
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchVal, setSearchVal] = useState("");
@@ -184,28 +165,6 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
 
           {/* Right actions */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }} className="flex-shrink-0">
-            {/* Dark mode toggle */}
-            <button
-              onClick={() => setDark(!dark)}
-              style={S.iconBtn}
-              title={dark ? "Light mode" : "Dark mode"}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--black)"; (e.currentTarget as HTMLElement).style.color = "var(--black)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "var(--gray-200)"; (e.currentTarget as HTMLElement).style.color = "var(--gray-600)"; }}
-            >
-              {dark ? (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
-            </button>
-
             <div className="hidden sm:flex items-center gap-2">
               {user ? (
                 <div style={{ position: "relative" }}>
@@ -383,9 +342,6 @@ export function Header({ onSearch, onHistory, onBilling }: Props) {
                 Sign in
               </button>
             )}
-            <button onClick={() => setDark(!dark)} style={{ padding: "12px 0", fontSize: 14, color: "var(--gray-600)", background: "none", border: "none", textAlign: "left", cursor: "pointer", marginTop: 8 }}>
-              {dark ? "Switch to light mode" : "Switch to dark mode"}
-            </button>
           </div>
         )}
       </header>
