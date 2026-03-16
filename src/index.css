@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Disable Tailwind dark variant — light mode only */
+@variant dark (&:is(.never-match));
+
 /* ─── Design Tokens ──────────────────────────────────────────────────────── */
 :root {
   --white:       #FFFFFF;
@@ -74,6 +77,10 @@ input, textarea, select { font-family: var(--font); }
 ::selection { background: var(--red-subtle); color: var(--red); }
 
 /* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes shrink {
   from { width: 100%; }
   to   { width: 0%; }

@@ -31,9 +31,6 @@ export default function ApiPage() {
 
   useEffect(() => {
     if (!user) { navigate("/"); return; }
-    if (!isPaidPlan && !loading) {
-      // still show the page but with upgrade prompt
-    }
     fetchKeys();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, plan]);
@@ -83,26 +80,41 @@ export default function ApiPage() {
     }
   };
 
+  const inputStyle: React.CSSProperties = {
+    flex: 1, padding: "10px 14px", border: "var(--border)",
+    borderRadius: "var(--radius)", background: "var(--white)",
+    color: "var(--black)", fontSize: 14, outline: "none",
+    fontFamily: "var(--font)",
+  };
+
   if (!isPaidPlan && !loading) {
     return (
-      <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0F0F0F] flex items-center justify-center p-4">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-violet-100 dark:from-indigo-950/50 dark:to-violet-950/50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+      <div style={{ minHeight: "100vh", background: "var(--white)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ maxWidth: 400, width: "100%", textAlign: "center" }}>
+          <div style={{ width: 56, height: 56, border: "var(--border)", borderRadius: "var(--radius)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", color: "var(--red)" }}>
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">API Access</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-            API access is available on the <strong>Team plan</strong>. Upgrade to integrate PDFcheck directly into your applications.
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "var(--black)", marginBottom: 12 }}>API Access</h1>
+          <p style={{ fontSize: 14, color: "var(--gray-600)", marginBottom: 32, lineHeight: 1.6 }}>
+            API access is available on the <strong>Team plan</strong>. Upgrade to integrate PDFcheck into your applications.
           </p>
           <a
             href="/#pricing"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold px-6 py-3 rounded-xl hover:from-indigo-500 hover:to-violet-500 transition shadow-md"
+            style={{
+              display: "inline-block", padding: "12px 24px",
+              background: "var(--red)", color: "#fff",
+              borderRadius: "var(--radius)", fontSize: 14,
+              fontWeight: 600, textDecoration: "none",
+            }}
           >
             View plans →
           </a>
-          <button onClick={() => navigate("/dashboard")} className="block mx-auto mt-3 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{ display: "block", margin: "16px auto 0", fontSize: 13, color: "var(--gray-400)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font)" }}
+          >
             ← Back to dashboard
           </button>
         </div>
@@ -111,56 +123,72 @@ export default function ApiPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0F0F0F] py-12 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <button onClick={() => navigate("/dashboard")} className="w-9 h-9 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 hover:text-indigo-600 transition">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <div style={{ minHeight: "100vh", background: "var(--gray-50)", fontFamily: "var(--font)" }}>
+      {/* Header */}
+      <header style={{ background: "var(--white)", borderBottom: "var(--border)", position: "sticky", top: 0, zIndex: 40 }}>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "0 24px", height: 56, display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{ width: 32, height: 32, border: "var(--border)", borderRadius: "var(--radius)", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--white)", cursor: "pointer", color: "var(--gray-600)", flexShrink: 0 }}
+          >
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">API Keys</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Manage your API access keys</p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: "var(--black)" }}>API Keys</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)" }}>Manage your API access keys</p>
           </div>
         </div>
+      </header>
+
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", gap: 16 }}>
 
         {/* Revealed new key banner */}
         {revealed && (
-          <div className="mb-6 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-2xl p-5">
-            <p className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-2">⚠️ Save your API key now</p>
-            <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">This key will only be shown once. Copy it and store it securely.</p>
-            <div className="flex items-center gap-2 bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-2.5">
-              <code className="text-xs font-mono text-gray-700 dark:text-gray-300 flex-1 break-all">{revealed}</code>
+          <div style={{ padding: 20, border: "1px solid var(--red)", borderRadius: "var(--radius)", background: "var(--red-subtle)" }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "var(--red)", marginBottom: 4 }}>Save your API key now</p>
+            <p style={{ fontSize: 12, color: "var(--red)", marginBottom: 12 }}>This key will only be shown once. Copy it and store it securely.</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: "10px 14px" }}>
+              <code style={{ fontSize: 12, fontFamily: "monospace", color: "var(--black)", flex: 1, wordBreak: "break-all" }}>{revealed}</code>
               <button
                 onClick={() => { navigator.clipboard.writeText(revealed); toast("Copied!", "success"); }}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 text-xs font-semibold flex-shrink-0"
+                style={{ fontSize: 12, fontWeight: 600, color: "var(--red)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, fontFamily: "var(--font)" }}
               >
                 Copy
               </button>
             </div>
-            <button onClick={() => setRevealed(null)} className="mt-3 text-xs text-amber-600 dark:text-amber-400 hover:underline">
+            <button
+              onClick={() => setRevealed(null)}
+              style={{ marginTop: 12, fontSize: 12, color: "var(--gray-400)", background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font)" }}
+            >
               I've saved it, dismiss
             </button>
           </div>
         )}
 
         {/* Create key */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-5 mb-6">
-          <h2 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Create new API key</h2>
-          <div className="flex gap-3">
+        <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 20 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "var(--black)", marginBottom: 12 }}>Create new API key</p>
+          <div style={{ display: "flex", gap: 10 }}>
             <input
               type="text"
               placeholder="Key name (e.g. Production)"
               value={newKeyName}
               onChange={(e) => setNewKeyName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && createKey()}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+              style={inputStyle}
             />
             <button
               onClick={createKey}
               disabled={creating || !newKeyName.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition disabled:opacity-50 shadow-md shadow-indigo-200/40"
+              style={{
+                padding: "10px 20px", background: "var(--red)", color: "#fff",
+                border: "none", borderRadius: "var(--radius)", fontSize: 14,
+                fontWeight: 600, cursor: creating || !newKeyName.trim() ? "not-allowed" : "pointer",
+                opacity: creating || !newKeyName.trim() ? 0.5 : 1,
+                fontFamily: "var(--font)", flexShrink: 0,
+              }}
             >
               {creating ? "Creating…" : "Create"}
             </button>
@@ -168,57 +196,64 @@ export default function ApiPage() {
         </div>
 
         {/* Keys list */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <h2 className="font-bold text-gray-900 dark:text-gray-100">Your API keys</h2>
-            <span className="text-xs text-gray-400">{keys.filter(k => k.is_active).length} active</span>
+        <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", overflow: "hidden" }}>
+          <div style={{ padding: "14px 20px", borderBottom: "var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ fontSize: 14, fontWeight: 600, color: "var(--black)" }}>Your API keys</p>
+            <span style={{ fontSize: 12, color: "var(--gray-400)" }}>{keys.filter(k => k.is_active).length} active</span>
           </div>
           {loading ? (
-            <div className="p-8 text-center text-gray-400 text-sm">Loading…</div>
+            <div style={{ padding: 32, textAlign: "center", fontSize: 14, color: "var(--gray-400)" }}>Loading…</div>
           ) : keys.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 text-sm">No API keys yet. Create one above.</div>
+            <div style={{ padding: 32, textAlign: "center", fontSize: 14, color: "var(--gray-400)" }}>No API keys yet. Create one above.</div>
           ) : (
-            <div className="divide-y divide-gray-100 dark:divide-gray-800">
-              {keys.map((key) => (
-                <div key={key.id} className="px-5 py-4 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{key.name}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        key.is_active
-                          ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                      }`}>
-                        {key.is_active ? "Active" : "Revoked"}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 font-mono mt-0.5">{key.key_prefix}…</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Created {new Date(key.created_at).toLocaleDateString()}
-                      {key.last_used_at && ` · Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
-                    </p>
+            keys.map((key, i) => (
+              <div
+                key={key.id}
+                style={{
+                  padding: "14px 20px", display: "flex", alignItems: "center",
+                  justifyContent: "space-between", gap: 16,
+                  borderTop: i > 0 ? "var(--border)" : "none",
+                  background: i % 2 === 0 ? "var(--white)" : "var(--gray-50)",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: "var(--black)" }}>{key.name}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99, border: "var(--border)",
+                      color: key.is_active ? "var(--black)" : "var(--gray-400)",
+                    }}>
+                      {key.is_active ? "Active" : "Revoked"}
+                    </span>
                   </div>
-                  {key.is_active && (
-                    <button
-                      onClick={() => revokeKey(key.id)}
-                      className="text-xs text-red-500 hover:text-red-700 font-semibold flex-shrink-0 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition"
-                    >
-                      Revoke
-                    </button>
-                  )}
+                  <p style={{ fontSize: 12, fontFamily: "monospace", color: "var(--gray-400)" }}>{key.key_prefix}…</p>
+                  <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>
+                    Created {new Date(key.created_at).toLocaleDateString()}
+                    {key.last_used_at && ` · Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
+                  </p>
                 </div>
-              ))}
-            </div>
+                {key.is_active && (
+                  <button
+                    onClick={() => revokeKey(key.id)}
+                    style={{ fontSize: 13, fontWeight: 600, color: "var(--red)", background: "none", border: "none", cursor: "pointer", flexShrink: 0, fontFamily: "var(--font)" }}
+                  >
+                    Revoke
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
 
         {/* Docs */}
-        <div className="mt-6 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900 rounded-2xl p-5">
-          <h3 className="font-bold text-indigo-900 dark:text-indigo-200 mb-2 text-sm">API Documentation</h3>
-          <p className="text-xs text-indigo-700 dark:text-indigo-300 leading-relaxed mb-3">
-            Use your API key in the <code className="bg-indigo-100 dark:bg-indigo-900 px-1 py-0.5 rounded">Authorization</code> header:
+        <div style={{ background: "var(--white)", border: "var(--border)", borderRadius: "var(--radius)", padding: 20 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: "var(--gray-400)", marginBottom: 12 }}>
+            API DOCUMENTATION
           </p>
-          <div className="bg-white dark:bg-gray-950 rounded-xl px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400 border border-indigo-100 dark:border-indigo-900">
+          <p style={{ fontSize: 13, color: "var(--gray-600)", marginBottom: 12, lineHeight: 1.6 }}>
+            Use your API key in the <code style={{ background: "var(--gray-100)", padding: "2px 6px", borderRadius: 3, fontSize: 12 }}>Authorization</code> header:
+          </p>
+          <div style={{ background: "var(--gray-50)", border: "var(--border)", borderRadius: "var(--radius)", padding: "10px 14px", fontFamily: "monospace", fontSize: 12, color: "var(--gray-600)" }}>
             Authorization: Bearer YOUR_API_KEY
           </div>
         </div>
@@ -227,7 +262,6 @@ export default function ApiPage() {
   );
 }
 
-// Simple key hash for storage
 async function hashKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(key);
